@@ -1,6 +1,5 @@
-import { Injectable, NotFoundException, NotImplementedException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { promises } from 'fs';
 import { AVAILABLE_LANGS } from 'src/constants/constants';
 import { ProductInfo } from 'src/entities/product-info.entity';
 import { Product } from 'src/entities/product.entity';
@@ -10,6 +9,9 @@ import { ProductsRepository } from 'src/repositories/protucts.repository';
 import { CreateProductDto } from './dto/create-product.dto';
 import { GetProductsFilterDto } from './dto/get-products-filter.dto';
 import { ProductDto } from './dto/product.dto';
+import * as path from 'path'
+import * as fs from 'fs'
+import { UpdateProductDto } from './dto/update-product.dto';
 
 @Injectable()
 export class ProductsService implements ProductsInterface {
@@ -27,10 +29,6 @@ export class ProductsService implements ProductsInterface {
         query.addSelect('product.image')
         query.addSelect('product.price')
         query.addSelect('product.discount')
-
-        if (!AVAILABLE_LANGS.includes(lang)) {
-            lang = 'en'
-        }
 
         query.where('info.lang = :lang', { lang })
 
@@ -87,6 +85,13 @@ export class ProductsService implements ProductsInterface {
     }
 
     async createProduct(createProductDto: CreateProductDto): Promise<{ id: number }> {
+        try {
+            fs.accessSync(path.resolve('uploads', createProductDto.image), fs.constants.F_OK)
+            fs.accessSync(path.resolve('uploads', createProductDto.volumeModel), fs.constants.F_OK)
+        } catch (err) {
+            throw new BadRequestException()
+        }
+
         const product = new Product()
         product.image = createProductDto.image
         product.volumeModel = createProductDto.volumeModel
@@ -103,6 +108,50 @@ export class ProductsService implements ProductsInterface {
         await productInfo.save()
 
         return { id: product.id }
+    }
+
+    async updateProduct(id: number, updateProductDto: UpdateProductDto): Promise<void> {
+        const product = await this.productsRepository.findOne(id)
+
+        if (!product) {
+            throw new NotFoundException()
+        }
+
+        const { image, volumeModel } = updateProductDto
+
+        if (image && image !== product.image) {
+            fs.access(path.resolve('uploads', image), fs.constants.F_OK, (err) => {
+                if (!err) {
+                    fs.rm(path.resolve('uploads', product.image), () => {})
+                    product.image = image
+                }
+            })
+        }
+
+        if (volumeModel && volumeModel !== product.volumeModel) {
+            fs.access(path.resolve('uploads', volumeModel), fs.constants.F_OK, (err) => {
+                if (!err) {
+                    fs.rm(path.resolve('uploads', product.volumeModel), () => {})
+                    product.volumeModel = volumeModel
+                }
+            })
+        }
+
+        product.price = updateProductDto.price
+        product.discount = updateProductDto.discount
+        await product.save()
+
+        let productInfo = await this.productInfosRepository.findOne({ productId: id, lang: updateProductDto.lang })
+
+        if (!productInfo) {
+            productInfo = new ProductInfo()
+            productInfo.productId = id
+            productInfo.lang = updateProductDto.lang
+        }
+
+        productInfo.name = updateProductDto.name
+        productInfo.description = updateProductDto.description
+        await productInfo.save()
     }
 
     async updateProductPrice(id: number, price: number): Promise<void> {
@@ -127,11 +176,25 @@ export class ProductsService implements ProductsInterface {
         await product.save()
     }
 
-    async deleteProduct(id: number): Promise<void> {
-        const result = await this.productsRepository.delete(id)
+    async unavailableProduct(id: number): Promise<void> {
+        const product = await this.productsRepository.findOne(id)
 
-        if (result.affected === 0) {
+        if (!product) {
             throw new NotFoundException()
         }
+
+        product.available = false
+        await product.save()
+    }
+
+    async availableProduct(id: number): Promise<void> {
+        const product = await this.productsRepository.findOne(id)
+
+        if (!product) {
+            throw new NotFoundException()
+        }
+
+        product.available = false
+        await product.save()
     }
 }

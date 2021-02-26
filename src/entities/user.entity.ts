@@ -1,6 +1,7 @@
-import { BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn } from "typeorm"
+import { BaseEntity, BeforeInsert, Column, Entity, Index, ManyToOne, PrimaryGeneratedColumn, RelationId } from "typeorm"
 import { CartItem } from "./cart-item.entity"
 import * as bcrypt from 'bcrypt';
+import { Role } from "./role.entity";
 
 @Entity()
 export class User extends BaseEntity {
@@ -28,6 +29,13 @@ export class User extends BaseEntity {
 
     @Column({ nullable: true })
     postalCode: string
+
+    @ManyToOne(() => Role, role => role.users, { onUpdate: "CASCADE", onDelete: "CASCADE" })
+    role: Role
+
+    @Column()
+    @RelationId((user: User) => user.role)
+    roleId: number
 
     cartItems: CartItem[]
 

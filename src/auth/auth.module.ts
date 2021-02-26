@@ -7,22 +7,26 @@ import { AuthController } from './auth.controller';
 import { AuthInterface } from './auth.interface';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './jwt.strategy';
+import { PermissionGuard } from './permission.guard';
 
 @Module({
   imports: [
     PassportModule.register({ defaultStrategy: 'jwt' }),
-    JwtModule.register({
-      secret: 'qwerty1234567890',
-      signOptions: {
-        expiresIn: 86400
-      }
+    JwtModule.registerAsync({
+      useFactory: async () => ({
+        secret: process.env.JWT_SECRET,
+        signOptions: {
+          expiresIn: 86400
+        }
+      })
     }),
     TypeOrmModule.forFeature([UsersRepository])
   ],
   controllers: [AuthController],
   providers: [
-    {provide: AuthInterface, useClass: AuthService},
-    JwtStrategy
+    { provide: AuthInterface, useClass: AuthService },
+    JwtStrategy,
+    PermissionGuard
   ],
   exports: [JwtStrategy, PassportModule]
 })
