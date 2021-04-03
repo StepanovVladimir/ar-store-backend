@@ -2,12 +2,11 @@ import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { UsersRepository } from 'src/repositories/users.repository';
+import { UserRepository } from 'src/common/repositories/user.repository';
 import { AuthController } from './auth.controller';
 import { AuthInterface } from './auth.interface';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './jwt.strategy';
-import { PermissionGuard } from './permission.guard';
 
 @Module({
   imports: [
@@ -16,18 +15,17 @@ import { PermissionGuard } from './permission.guard';
       useFactory: async () => ({
         secret: process.env.JWT_SECRET,
         signOptions: {
-          expiresIn: 86400
+          expiresIn: 28800
         }
       })
     }),
-    TypeOrmModule.forFeature([UsersRepository])
+    TypeOrmModule.forFeature([UserRepository])
   ],
   controllers: [AuthController],
   providers: [
     { provide: AuthInterface, useClass: AuthService },
-    JwtStrategy,
-    PermissionGuard
+    JwtStrategy
   ],
-  exports: [JwtStrategy, PassportModule]
+  exports: [PassportModule]
 })
 export class AuthModule {}

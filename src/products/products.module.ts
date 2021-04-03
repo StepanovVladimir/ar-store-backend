@@ -1,20 +1,19 @@
 import { Module } from '@nestjs/common';
-import { ProductsInterface } from 'src/products/products.interface';
 import { ProductsService } from './products.service';
 import { ProductsController } from './products.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ProductsRepository } from 'src/repositories/protucts.repository';
-import { ProductInfosRepository } from 'src/repositories/product-infos.repository';
 import { AuthModule } from 'src/auth/auth.module';
-import { PermissionGuard } from 'src/auth/permission.guard';
-import { UsersRepository } from 'src/repositories/users.repository';
+import { ProductRepository } from 'src/common/repositories/protuct.repository';
+import { ProductInfoRepository } from 'src/common/repositories/product-info.repository';
+import { ProductSizeRepository } from 'src/common/repositories/product-size.repository';
+import { CategoryRepository } from 'src/common/repositories/category.repository';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([ProductsRepository, ProductInfosRepository, UsersRepository]),
+    TypeOrmModule.forFeature([ProductRepository, ProductInfoRepository, ProductSizeRepository, CategoryRepository]),
     AuthModule
   ],
   controllers: [ProductsController],
-  providers: [{ provide: ProductsInterface, useClass: ProductsService }, PermissionGuard]
+  providers: [ProductsService]
 })
 export class ProductsModule {}

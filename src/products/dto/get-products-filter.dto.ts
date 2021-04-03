@@ -2,9 +2,12 @@ import { IsNotEmpty, IsOptional } from "class-validator";
 
 export class GetProductsFilterDto {
     @IsOptional()
-    categoryId: number
-
-    @IsOptional()
     @IsNotEmpty()
     search: string
+
+    @IsOptional()
+    size: number
+
+    @IsOptional()
+    categoryId: number
 }

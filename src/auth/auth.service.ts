@@ -1,24 +1,25 @@
 import { ConflictException, Injectable, InternalServerErrorException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { User } from 'src/entities/user.entity';
-import { UsersRepository } from 'src/repositories/users.repository';
+import { UserRepository } from 'src/common/repositories/user.repository';
+import { User } from 'src/common/entities/user.entity';
 import { SignUpDto } from './dto/sign-up.dto';
 import * as bcrypt from 'bcrypt';
 import { JwtPayload } from './jwt-payload';
 import { JwtService } from '@nestjs/jwt';
 import { AuthInterface } from './auth.interface';
 import { SignInDto } from './dto/sign-in.dto';
-import { ROLE_PERMISSIONS } from 'src/constants/constants';
+import { ROLE_PERMISSIONS } from 'src/config/constants';
+import { AuthResultDto } from './dto/auth-result.dto';
 
 @Injectable()
 export class AuthService implements AuthInterface {
     constructor(
-        @InjectRepository(UsersRepository)
-        private usersRepository: UsersRepository,
+        @InjectRepository(UserRepository)
+        private usersRepository: UserRepository,
         private jwtService: JwtService
     ) {}
 
-    async signUp(signUpDto: SignUpDto): Promise<void> {
+    async signUp(signUpDto: SignUpDto): Promise<{ id: number }> {
         const user = new User();
         user.email = signUpDto.email.toLowerCase()
         user.salt = await bcrypt.genSalt()
@@ -32,14 +33,16 @@ export class AuthService implements AuthInterface {
             await user.save()
         } catch (error) {
             if (error.code === '23505') {
-                throw new ConflictException()
+                throw new ConflictException('There is already a user with this email address')
             } else {
-                throw new InternalServerErrorException()
+                throw error
             }
         }
+
+        return { id: user.id }
     }
 
-    async signIn(signInDto: SignInDto): Promise<{ accessToken: string }> {
+    async signIn(signInDto: SignInDto): Promise<AuthResultDto> {
         const user = await this.usersRepository.findOne({ email: signInDto.email.toLowerCase() }, { relations: ["role"] })
 
         if (!user || !await user.validatePassword(signInDto.password)) {
@@ -47,12 +50,16 @@ export class AuthService implements AuthInterface {
         }
 
         const payload: JwtPayload = {
-            email: user.email,
-            permissions: ROLE_PERMISSIONS[user.role.name]
+            id: user.id
         }
 
         const accessToken = await this.jwtService.sign(payload)
 
-        return { accessToken }
+        return {
+            accessToken,
+            id: user.id,
+            role: user.role.name,
+            permissions: ROLE_PERMISSIONS[user.role.name]
+        }
     }
 }

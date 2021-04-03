@@ -1,3 +1,5 @@
+import { ProductSizeDto } from "./product-size.dto"
+
 export class ProductDto {
     id: number
     name: string
@@ -6,5 +8,6 @@ export class ProductDto {
     volumeModel: string
     price: number
     discount: number
-    available: boolean
+    sizes: ProductSizeDto[]
+    categoryIds: number[]
 }

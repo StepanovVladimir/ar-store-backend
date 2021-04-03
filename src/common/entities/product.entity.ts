@@ -1,7 +1,7 @@
-import { BaseEntity, Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm"
-import { ArType } from "./ar-type.entity"
+import { BaseEntity, Column, Entity, JoinTable, ManyToMany, OneToMany, PrimaryGeneratedColumn } from "typeorm"
 import { Category } from "./category.entity"
 import { ProductInfo } from "./product-info.entity"
+import { ProductSize } from "./product-size.entity"
 
 @Entity()
 export class Product extends BaseEntity {
@@ -20,15 +20,13 @@ export class Product extends BaseEntity {
     @Column()
     discount: number
 
-    @Column()
-    available: boolean
-
     @OneToMany(() => ProductInfo, info => info.product, { onUpdate: "CASCADE", onDelete: "CASCADE" })
     infos: ProductInfo[]
 
-    /*categories: Category[]
+    @OneToMany(() => ProductSize, size => size.product, { onUpdate: "CASCADE", onDelete: "CASCADE" })
+    sizes: ProductSize[]
 
-    arTypeId: number
-
-    arType: ArType*/
+    @ManyToMany(() => Category, category => category.products, { onUpdate: "CASCADE", onDelete: "CASCADE" })
+    @JoinTable()
+    categories: Category[]
 }

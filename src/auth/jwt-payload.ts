@@ -1,4 +1,3 @@
 export class JwtPayload {
-    email: string
-    permissions: string[]
+    id: number
 }

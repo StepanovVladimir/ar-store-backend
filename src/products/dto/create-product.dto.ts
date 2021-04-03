@@ -1,5 +1,5 @@
 import { IsIn, IsNotEmpty, IsPositive, Max, Min } from "class-validator"
-import { AVAILABLE_LANGS } from "src/constants/constants"
+import { AVAILABLE_LANGS } from "src/config/constants"
 
 export class CreateProductDto {
     @IsIn(AVAILABLE_LANGS)
@@ -25,4 +25,8 @@ export class CreateProductDto {
     @Min(0)
     @Max(100)
     discount: number
+
+    sizes: number[]
+
+    categoryIds: number[]
 }

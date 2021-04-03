@@ -1,4 +1,4 @@
-import { BaseEntity, BeforeInsert, Column, Entity, Index, ManyToOne, PrimaryGeneratedColumn, RelationId } from "typeorm"
+import { BaseEntity, Column, Entity, Index, ManyToOne, PrimaryGeneratedColumn, RelationId } from "typeorm"
 import { CartItem } from "./cart-item.entity"
 import * as bcrypt from 'bcrypt';
 import { Role } from "./role.entity";

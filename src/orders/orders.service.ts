@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { OrderItem } from 'src/entities/order-item.entity';
-import { Order } from 'src/entities/order.entity';
-import { User } from 'src/entities/user.entity';
+import { OrderItem } from 'src/common/entities/order-item.entity';
+import { Order } from 'src/common/entities/order.entity';
+import { User } from 'src/common/entities/user.entity';
 import { OrdersInterface } from 'src/orders/orders.interface';
 
 @Injectable()
