@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ProductsModule } from './products/products.module';
 import { CategoriesModule } from './categories/categories.module';
-import { CartsModule } from './carts/carts.module';
+import { CartModule } from './cart/cart.module';
 import { OrdersModule } from './orders/orders.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './auth/auth.module';
@@ -14,7 +14,7 @@ import { getTypeormConfig } from './config/typeorm.config';
     TypeOrmModule.forRoot(getTypeormConfig()),
     ProductsModule,
     CategoriesModule,
-    CartsModule,
+    CartModule,
     OrdersModule,
     AuthModule
   ]

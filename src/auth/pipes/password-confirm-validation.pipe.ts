@@ -1,10 +1,9 @@
 import { BadRequestException, PipeTransform } from "@nestjs/common";
-import { SignUpDto } from "../dto/sign-up.dto";
 
-export class PasswordConfirmValidationPipe implements PipeTransform<SignUpDto, SignUpDto> {
-    transform(value: SignUpDto) {
+export class PasswordConfirmValidationPipe implements PipeTransform {
+    transform(value) {
         if (value.password !== value.passwordConfirm) {
-            throw new BadRequestException('Passwords don\'t match')
+            throw new BadRequestException('Passwords don\'t match', 'PasswordsNotMatch')
         }
 
         return value

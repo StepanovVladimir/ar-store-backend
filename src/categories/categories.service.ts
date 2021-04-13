@@ -51,7 +51,7 @@ export class CategoriesService {
     async updateCategory(id: number, createCategoryDto: CreateCategoryDto): Promise<{ id: number }> {
         const category = await this.categoryRepository.findOne(id)
         if (!category) {
-            throw new NotFoundException('There is no category with this id')
+            throw new NotFoundException('There is no category with this id', 'CategoryNotFound')
         }
 
         let categoryInfo = await this.categoryInfoRepository.findOne({ categoryId: id, lang: createCategoryDto.lang })
@@ -65,5 +65,14 @@ export class CategoriesService {
         await categoryInfo.save()
 
         return { id }
+    }
+
+    async deleteCategory(id: number): Promise<{ message: string }> {
+        const result = await this.categoryRepository.delete(id)
+        if (result.affected == 0) {
+            throw new NotFoundException('There is no category with this id', 'CategoryNotFound')
+        }
+
+        return { message: 'Deleted' }
     }
 }

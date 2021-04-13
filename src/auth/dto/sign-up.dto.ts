@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, MaxLength, MinLength } from "class-validator"
+import { IsEmail, IsNotEmpty, IsOptional, IsPostalCode, MaxLength, MinLength } from "class-validator"
 
 export class SignUpDto {
     @IsNotEmpty()
@@ -22,5 +22,8 @@ export class SignUpDto {
     lastName: string
 
     address: string
+
+    @IsPostalCode('RU')
+    @IsOptional()
     postalCode: string
 }

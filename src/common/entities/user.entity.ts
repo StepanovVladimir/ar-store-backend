@@ -1,7 +1,8 @@
-import { BaseEntity, Column, Entity, Index, ManyToOne, PrimaryGeneratedColumn, RelationId } from "typeorm"
+import { BaseEntity, Column, Entity, Index, ManyToOne, OneToMany, PrimaryGeneratedColumn, RelationId } from "typeorm"
 import { CartItem } from "./cart-item.entity"
 import * as bcrypt from 'bcrypt';
 import { Role } from "./role.entity";
+import { Order } from "./order.entity";
 
 @Entity()
 export class User extends BaseEntity {
@@ -37,10 +38,9 @@ export class User extends BaseEntity {
     @RelationId((user: User) => user.role)
     roleId: number
 
+    @OneToMany(() => CartItem, item => item.user, { onUpdate: "CASCADE", onDelete: "CASCADE" })
     cartItems: CartItem[]
 
-    async validatePassword(password: string): Promise<boolean> {
-        const hash = await bcrypt.hash(password, this.salt)
-        return hash === this.passwordHash
-    }
+    @OneToMany(() => Order, order => order.user, { onUpdate: "CASCADE", onDelete: "CASCADE" })
+    orders: Order[]
 }

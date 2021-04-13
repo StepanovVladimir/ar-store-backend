@@ -9,8 +9,8 @@ import { Product } from 'src/common/entities/product.entity';
 import { ProductInfo } from 'src/common/entities/product-info.entity';
 import { ProductSize } from 'src/common/entities/product-size.entity';
 import { ProductSizeRepository } from 'src/common/repositories/product-size.repository';
-import { ProductSizeDto } from './dto/product-size.dto';
 import { CategoryRepository } from 'src/common/repositories/category.repository';
+import { AddProductQuantityDto } from './dto/add-product-quantity.dto';
 
 @Injectable()
 export class ProductsService {
@@ -29,14 +29,14 @@ export class ProductsService {
     ) {}
     
     async getProducts(filterDto: GetProductsFilterDto, lang: string): Promise<ProductDto[]> {
-        const query = this.productInfoRepository.createQueryBuilder('info')
-        query.select('info.productId')
+        const query = this.productRepository.createQueryBuilder('product')
+        query.select('product.id')
         query.addSelect('info.name')
         query.addSelect('product.image')
         query.addSelect('product.price')
         query.addSelect('product.discount')
 
-        query.innerJoin('info.product', 'product')
+        query.innerJoin('product.infos', 'info', 'info.lang = :lang', { lang })
         query.innerJoin('product.sizes', 'size')
 
         if (filterDto.categoryId) {
@@ -53,14 +53,24 @@ export class ProductsService {
             query.andWhere('size.size = :size', { size: filterDto.size })
         }
 
+        if (filterDto.skip) {
+            query.skip(filterDto.skip)
+        }
+
+        if (filterDto.take) {
+            query.take(filterDto.take)
+        } else {
+            query.take(20)
+        }
+
         const products = await query.getMany()
         return products.map(product => {
             const productDto = new ProductDto()
-            productDto.id = product.productId
-            productDto.name = product.name
-            productDto.image = product.product.image
-            productDto.price = product.product.price
-            productDto.discount = product.product.discount
+            productDto.id = product.id
+            productDto.name = product.infos[0].name
+            productDto.image = product.image
+            productDto.price = product.price
+            productDto.discount = product.discount
             return productDto
         })
     }
@@ -69,7 +79,7 @@ export class ProductsService {
         const product = await this.productRepository.findOne(id, { relations: ['sizes', 'categories'] })
 
         if (!product) {
-            throw new NotFoundException('There is no product with this id')
+            throw new NotFoundException('There is no product with this id', 'ProductNotFound')
         }
 
         let info = await this.productInfoRepository.findOne({ productId: id, lang: lang })
@@ -101,7 +111,7 @@ export class ProductsService {
         product.image = createProductDto.image
         product.volumeModel = createProductDto.volumeModel
         product.price = createProductDto.price
-        product.discount = createProductDto.discount
+        product.discount = 0 //createProductDto.discount
         const query = this.categoryRepository.createQueryBuilder('category')
         query.where('category.id IN (:...ids)', { ids: createProductDto.categoryIds })
         const categories = await query.getMany()
@@ -129,13 +139,13 @@ export class ProductsService {
     async updateProduct(id: number, createProductDto: CreateProductDto): Promise<{ id: number }> {
         const product = await this.productRepository.findOne(id)
         if (!product) {
-            throw new NotFoundException('There is no product with this id')
+            throw new NotFoundException('There is no product with this id', 'ProductNotFound')
         }
 
         product.image = createProductDto.image
         product.volumeModel = createProductDto.volumeModel
         product.price = createProductDto.price
-        product.discount = createProductDto.discount
+        product.discount = 0 //createProductDto.discount
         const categoriesQuery = this.categoryRepository.createQueryBuilder('category')
         categoriesQuery.where('category.id IN (:...ids)', { ids: createProductDto.categoryIds })
         const categories = await categoriesQuery.getMany()
@@ -179,7 +189,7 @@ export class ProductsService {
         const product = await this.productRepository.findOne(id)
 
         if (!product) {
-            throw new NotFoundException('There is no product with this id')
+            throw new NotFoundException('There is no product with this id', 'ProductNotFound')
         }
 
         product.price = price
@@ -188,15 +198,27 @@ export class ProductsService {
         return { id }
     }
 
-    async updateProductDiscount(id: number, discount: number): Promise<{ id: number }> {
+    /*async updateProductDiscount(id: number, discount: number): Promise<{ id: number }> {
         const product = await this.productRepository.findOne(id)
 
         if (!product) {
-            throw new NotFoundException('There is no product with this id')
+            throw new NotFoundException('There is no product with this id', 'ProductNotFound')
         }
 
         product.discount = discount
         await product.save()
+
+        return { id }
+    }*/
+
+    async addProductQuantity(id: number, updateQuantityDto: AddProductQuantityDto): Promise<{ id: number }> {
+        const productSize = await this.productSizeRepository.findOne({ productId: id, size: updateQuantityDto.size })
+        if (!productSize) {
+            throw new NotFoundException('The product with this id does not have this size', 'ProductSizeNotFound')
+        }
+
+        productSize.quantity += updateQuantityDto.quantity
+        await productSize.save()
 
         return { id }
     }

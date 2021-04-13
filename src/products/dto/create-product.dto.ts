@@ -21,10 +21,10 @@ export class CreateProductDto {
     @IsPositive()
     price: number
 
-    @IsNotEmpty()
+/*    @IsNotEmpty()
     @Min(0)
     @Max(100)
-    discount: number
+    discount: number*/
 
     sizes: number[]
 

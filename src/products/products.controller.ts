@@ -7,10 +7,10 @@ import { HasPermission } from 'src/common/decorators/has-permission.decorator';
 import { CreateProductDto } from './dto/create-product.dto';
 import { GetProductsFilterDto } from './dto/get-products-filter.dto';
 import { ProductDto } from './dto/product.dto';
-import { ProductDiscountValidationPipe } from './pipes/product-discount-validation.pipe';
-import { ProductPriceValidationPipe } from './pipes/product-price-validation.pipe';
 import { ProductSizesValidationPipe } from './pipes/product-sizes-validation.pipe';
 import { ProductsService } from './products.service';
+import { AddProductQuantityDto } from './dto/add-product-quantity.dto';
+import { UpdateProductPriceDto } from './dto/update-product-price.dto';
 
 @Controller('products')
 export class ProductsController {
@@ -54,18 +54,28 @@ export class ProductsController {
     @UseGuards(AuthGuard(), PermissionGuard)
     updateProductPrice(
         @Param('id', ParseIntPipe) id: number,
-        @Body('price', ProductPriceValidationPipe) price: number
+        @Body(ValidationPipe) updatePriceDto: UpdateProductPriceDto
     ): Promise<{ id: number }> {
-        return this.productsService.updateProductPrice(id, price)
+        return this.productsService.updateProductPrice(id, updatePriceDto.price)
     }
 
-    @Patch('/:id/discount')
+    /*@Patch('/:id/discount')
     @HasPermission(PRODUCTS_MANAGING_PERMISSION)
     @UseGuards(AuthGuard(), PermissionGuard)
     updateProductDiscount(
         @Param('id', ParseIntPipe) id: number,
-        @Body('discount', ProductDiscountValidationPipe) discount: number
+        @Body(ValidationPipe) updateDiscountDto: UpdateProductDiscountDto
     ): Promise<{ id: number }> {
-        return this.productsService.updateProductDiscount(id, discount)
+        return this.productsService.updateProductDiscount(id, updateDiscountDto.discount)
+    }*/
+
+    @Patch('/:id/quantity')
+    @HasPermission(PRODUCTS_MANAGING_PERMISSION)
+    @UseGuards(AuthGuard(), PermissionGuard)
+    addProductQuantity(
+        @Param('id', ParseIntPipe) id: number,
+        @Body(ValidationPipe) addQuantityDto: AddProductQuantityDto
+    ): Promise<{ id: number }> {
+        return this.productsService.addProductQuantity(id, addQuantityDto)
     }
 }

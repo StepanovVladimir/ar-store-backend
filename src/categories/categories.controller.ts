@@ -33,4 +33,11 @@ export class CategoriesController {
     ): Promise<{ id: number }> {
         return this.categoriesService.updateCategory(id, createCategoryDto)
     }
+
+    @Delete('/:id')
+    @HasPermission(PRODUCTS_MANAGING_PERMISSION)
+    @UseGuards(AuthGuard(), PermissionGuard)
+    deleteCategory(@Param('id', ParseIntPipe) id: number): Promise<{ message: string }> {
+        return this.categoriesService.deleteCategory(id)
+    }
 }

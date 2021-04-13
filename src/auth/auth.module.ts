@@ -4,7 +4,6 @@ import { PassportModule } from '@nestjs/passport';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserRepository } from 'src/common/repositories/user.repository';
 import { AuthController } from './auth.controller';
-import { AuthInterface } from './auth.interface';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './jwt.strategy';
 
@@ -23,7 +22,7 @@ import { JwtStrategy } from './jwt.strategy';
   ],
   controllers: [AuthController],
   providers: [
-    { provide: AuthInterface, useClass: AuthService },
+    AuthService,
     JwtStrategy
   ],
   exports: [PassportModule]
