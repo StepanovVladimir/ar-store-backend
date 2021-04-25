@@ -1,17 +1,17 @@
 import { BaseEntity, Column, Entity, ManyToOne, PrimaryColumn, RelationId } from "typeorm";
-import { Product } from "./product.entity";
+import { ProductColor } from "./product-color.entity";
 
 @Entity()
 export class ProductSize extends BaseEntity {
-    @ManyToOne(() => Product, product => product.sizes, { onUpdate: "CASCADE", onDelete: "CASCADE" })
-    product: Product
-
-    @PrimaryColumn()
-    @RelationId((size: ProductSize) => size.product)
-    productId: number
-
     @PrimaryColumn()
     size: number
+
+    @ManyToOne(() => ProductColor, { onUpdate: "CASCADE", onDelete: "CASCADE" })
+    color: ProductColor
+
+    @PrimaryColumn()
+    @RelationId((size: ProductSize) => size.color)
+    colorId: number
 
     @Column()
     quantity: number

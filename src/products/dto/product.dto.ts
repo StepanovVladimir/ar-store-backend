@@ -1,13 +1,20 @@
-import { ProductSizeDto } from "./product-size.dto"
+import { ColorDto } from "./color.dto"
 
 export class ProductDto {
     id: number
     name: string
-    description: string
+    description?: string
+    brandId?: number
+    brand: string
+    typeId?: number
+    type?: string
+    genderId?: number
+    gender?: string
+    seasonId?: number
+    season?: string
     image: string
-    volumeModel: string
+    volumeModel?: string
     price: number
-    discount: number
-    sizes: ProductSizeDto[]
-    categoryIds: number[]
+    sizes?: number[]
+    colors?: ColorDto[]
 }

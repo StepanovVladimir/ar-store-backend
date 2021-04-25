@@ -1,10 +1,7 @@
-import { IsIn, IsNotEmpty, IsPositive, Max, Min } from "class-validator"
-import { AVAILABLE_LANGS } from "src/config/constants"
+import { IsNotEmpty, IsPositive } from "class-validator"
+import { ColorDto } from "./color.dto"
 
 export class CreateProductDto {
-    @IsIn(AVAILABLE_LANGS)
-    lang: string
-
     @IsNotEmpty()
     name: string
 
@@ -12,10 +9,31 @@ export class CreateProductDto {
     description: string
 
     @IsNotEmpty()
+    brandId: number
+
+    @IsNotEmpty()
+    typeId: number
+
+    @IsNotEmpty()
+    genderId: number
+
+    @IsNotEmpty()
+    seasonId: number
+
+    @IsNotEmpty()
     image: string
 
     @IsNotEmpty()
     volumeModel: string
+
+    @IsNotEmpty()
+    liningMaterial: string
+
+    @IsNotEmpty()
+    soleMaterial: string
+
+    @IsNotEmpty()
+    insoleMaterial: string
 
     @IsNotEmpty()
     @IsPositive()
@@ -28,5 +46,5 @@ export class CreateProductDto {
 
     sizes: number[]
 
-    categoryIds: number[]
+    colors: ColorDto[]
 }

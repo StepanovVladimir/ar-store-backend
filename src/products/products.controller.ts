@@ -1,16 +1,16 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Patch, Post, Put, Query, UseGuards, ValidationPipe } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseIntPipe, Post, Put, Query, UseGuards, ValidationPipe } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { PermissionGuard } from 'src/common/guards/permission.guard';
-import { PRODUCTS_MANAGING_PERMISSION } from 'src/config/constants';
-import { GetLang } from 'src/common/decorators/get-lang.decorator';
-import { HasPermission } from 'src/common/decorators/has-permission.decorator';
 import { CreateProductDto } from './dto/create-product.dto';
 import { GetProductsFilterDto } from './dto/get-products-filter.dto';
 import { ProductDto } from './dto/product.dto';
-import { ProductSizesValidationPipe } from './pipes/product-sizes-validation.pipe';
 import { ProductsService } from './products.service';
-import { AddProductQuantityDto } from './dto/add-product-quantity.dto';
-import { UpdateProductPriceDto } from './dto/update-product-price.dto';
+import { HasRoles } from 'src/common/decorators/has-roles.decorator';
+import { ADMIN_ROLE } from 'src/config/constants';
+import { RolesGuard } from 'src/common/guards/roles.guard';
+import { ProductSizesValidationPipe } from './pipes/product-sizes-validation.pipe';
+import { PartialUpdateProductDto } from './dto/partial-update-product.dto';
+import { QuantityDto } from './dto/quantity.dto';
+import { ProductQuantitiesValidationPipe } from './pipes/product-quantities-validation.pipe';
 
 @Controller('products')
 export class ProductsController {
@@ -18,64 +18,47 @@ export class ProductsController {
 
     @Get()
     getProducts(
-        @Query(ValidationPipe) filterDto: GetProductsFilterDto,
-        @GetLang() lang: string
+        @Query(ValidationPipe) filterDto: GetProductsFilterDto
     ): Promise<ProductDto[]> {
-        return this.productsService.getProducts(filterDto, lang)
+        return this.productsService.getProducts(filterDto)
     }
 
     @Get('/:id')
-    getProduct(
-        @Param('id', ParseIntPipe) id: number,
-        @GetLang() lang: string
-    ): Promise<ProductDto> {
-        return this.productsService.getProduct(id, lang)
+    getProduct(@Param('id', ParseIntPipe) id: number): Promise<ProductDto> {
+        return this.productsService.getProduct(id)
+    }
+
+    @Get('/:id/quantities')
+    getQuantities(@Param('id', ParseIntPipe) id: number): Promise<QuantityDto[]> {
+        return this.productsService.getQuantities(id)
     }
 
     @Post()
-    @HasPermission(PRODUCTS_MANAGING_PERMISSION)
-    @UseGuards(AuthGuard(), PermissionGuard)
-    createProduct(@Body(ValidationPipe, ProductSizesValidationPipe) createProductDto: CreateProductDto): Promise<{ id: number }> {
+    @HasRoles(ADMIN_ROLE)
+    @UseGuards(AuthGuard(), RolesGuard)
+    createProduct(
+        @Body(ValidationPipe, ProductSizesValidationPipe) createProductDto: CreateProductDto
+    ): Promise<{ id: number }> {
         return this.productsService.createProduct(createProductDto)
     }
 
     @Put('/:id')
-    @HasPermission(PRODUCTS_MANAGING_PERMISSION)
-    @UseGuards(AuthGuard(), PermissionGuard)
+    @HasRoles(ADMIN_ROLE)
+    @UseGuards(AuthGuard(), RolesGuard)
     updateProduct(
         @Param('id', ParseIntPipe) id: number,
-        @Body(ValidationPipe, ProductSizesValidationPipe) createProductDto: CreateProductDto
+        @Body(ValidationPipe, ProductSizesValidationPipe) updateProductDto: CreateProductDto
     ): Promise<{ id: number }> {
-        return this.productsService.updateProduct(id, createProductDto)
+        return this.productsService.updateProduct(id, updateProductDto)
     }
 
-    @Patch('/:id/price')
-    @HasPermission(PRODUCTS_MANAGING_PERMISSION)
-    @UseGuards(AuthGuard(), PermissionGuard)
-    updateProductPrice(
+    @Put('/:id/partial')
+    @HasRoles(ADMIN_ROLE)
+    @UseGuards(AuthGuard(), RolesGuard)
+    partialUpdateProduct(
         @Param('id', ParseIntPipe) id: number,
-        @Body(ValidationPipe) updatePriceDto: UpdateProductPriceDto
+        @Body(ValidationPipe, ProductQuantitiesValidationPipe) updateProductDto: PartialUpdateProductDto
     ): Promise<{ id: number }> {
-        return this.productsService.updateProductPrice(id, updatePriceDto.price)
-    }
-
-    /*@Patch('/:id/discount')
-    @HasPermission(PRODUCTS_MANAGING_PERMISSION)
-    @UseGuards(AuthGuard(), PermissionGuard)
-    updateProductDiscount(
-        @Param('id', ParseIntPipe) id: number,
-        @Body(ValidationPipe) updateDiscountDto: UpdateProductDiscountDto
-    ): Promise<{ id: number }> {
-        return this.productsService.updateProductDiscount(id, updateDiscountDto.discount)
-    }*/
-
-    @Patch('/:id/quantity')
-    @HasPermission(PRODUCTS_MANAGING_PERMISSION)
-    @UseGuards(AuthGuard(), PermissionGuard)
-    addProductQuantity(
-        @Param('id', ParseIntPipe) id: number,
-        @Body(ValidationPipe) addQuantityDto: AddProductQuantityDto
-    ): Promise<{ id: number }> {
-        return this.productsService.addProductQuantity(id, addQuantityDto)
+        return this.productsService.partialUpdateProductDto(id, updateProductDto)
     }
 }

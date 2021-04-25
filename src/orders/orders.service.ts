@@ -7,6 +7,7 @@ import { CartItemRepository } from 'src/common/repositories/cart-item.repository
 import { OrderRepository } from 'src/common/repositories/order.repository';
 import { ProductSizeRepository } from 'src/common/repositories/product-size.repository';
 import { PROCESSING_STATUS_ID } from 'src/config/constants';
+import { OrderItemDto } from './dto/order-item.dto';
 import { OrderDto } from './dto/order.dto';
 
 @Injectable()
@@ -25,13 +26,17 @@ export class OrdersService {
     async getOrders(user: User): Promise<OrderDto[]> {
         const orders = await this.orderRepository.find({
             where: { userId: user.id },
-            relations: ['status', 'items'],
+            relations: ['user', 'status', 'items'],
             order: { time: 'DESC' }
         })
 
         return orders.map(order => {
             const dto = new OrderDto()
             dto.id = order.id
+            dto.userId = order.userId
+            dto.email = order.user.email
+            dto.firstName = order.user.firstName
+            dto.lastName = order.user.lastName
             dto.time = order.time
             dto.address = order.address
             dto.postalCode = order.postalCode
@@ -45,18 +50,21 @@ export class OrdersService {
         })
     }
 
-    async getOrder(id: number, user: User, lang: string): Promise<OrderDto> {
+    /*async getOrder(id: number, user: User, lang: string): Promise<OrderDto> {
         const query = this.orderRepository.createQueryBuilder('order')
         query.select('order.id')
         query.addSelect('order.time')
         query.addSelect('order.address')
         query.addSelect('order.postalCode')
+        query.addSelect('order.userId')
+        query.addSelect('user.email')
+        query.addSelect('user.firstName')
+        query.addSelect('user.lastName')
         query.addSelect('status.name')
         query.addSelect('item.productId')
         query.addSelect('item.size')
         query.addSelect('item.price')
         query.addSelect('item.quantity')
-        query.addSelect('product.image')
         query.addSelect('product.price')
         query.addSelect('product.discount')
         query.addSelect('info.name')
@@ -64,9 +72,11 @@ export class OrdersService {
         query.where('order.id = :id', { id })
         query.andWhere('order.userId = :userId', { userId: user.id })
 
+        query.innerJoin('order.user', 'user')
         query.innerJoin('order.status', 'status')
         query.innerJoin('order.items', 'item')
         query.innerJoin('item.product', 'product')
+        query.innerJoin('product.images', 'image', 'image.number = 0')
         query.innerJoin('product.infos', 'info')
 
         const order = await query.getOne()
@@ -77,6 +87,10 @@ export class OrdersService {
 
         const orderDto = new OrderDto()
         orderDto.id = order.id
+        orderDto.userId = order.userId
+        orderDto.email = order.user.email
+        orderDto.firstName = order.user.firstName
+        orderDto.lastName = order.user.lastName
         orderDto.time = order.time
         orderDto.address = order.address
         orderDto.postalCode = order.postalCode
@@ -96,7 +110,7 @@ export class OrdersService {
             return {
                 productId: item.productId,
                 name: info.name,
-                image: item.product.image,
+                image: item.product.images[0].path,
                 price: item.product.price,
                 size: item.size,
                 quantity: item.quantity
@@ -104,7 +118,7 @@ export class OrdersService {
         })
 
         return orderDto
-    }
+    }*/
 
     async createOrder(user: User): Promise<{ id: number }> {
         if (!user.address || !user.postalCode) {

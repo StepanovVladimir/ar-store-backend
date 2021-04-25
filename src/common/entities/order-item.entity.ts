@@ -1,4 +1,5 @@
 import { BaseEntity, Column, Entity, ManyToOne, PrimaryColumn, RelationId } from "typeorm"
+import { Color } from "./color.entity"
 import { Order } from "./order.entity"
 import { Product } from "./product.entity"
 
@@ -17,6 +18,13 @@ export class OrderItem extends BaseEntity {
     @PrimaryColumn()
     @RelationId((item: OrderItem) => item.product)
     productId: number
+
+    @ManyToOne(() => Color, { onUpdate: "CASCADE", onDelete: "CASCADE" })
+    color: Color
+
+    @PrimaryColumn()
+    @RelationId((item: OrderItem) => item.color)
+    colorId: number
 
     @PrimaryColumn()
     size: number

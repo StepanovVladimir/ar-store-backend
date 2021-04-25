@@ -4,13 +4,13 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { GetProductsFilterDto } from './dto/get-products-filter.dto';
 import { ProductDto } from './dto/product.dto';
 import { ProductRepository } from 'src/common/repositories/protuct.repository';
-import { ProductInfoRepository } from 'src/common/repositories/product-info.repository';
 import { Product } from 'src/common/entities/product.entity';
-import { ProductInfo } from 'src/common/entities/product-info.entity';
 import { ProductSize } from 'src/common/entities/product-size.entity';
+import { PartialUpdateProductDto } from './dto/partial-update-product.dto';
+import { ProductColor } from 'src/common/entities/product-color.entity';
 import { ProductSizeRepository } from 'src/common/repositories/product-size.repository';
-import { CategoryRepository } from 'src/common/repositories/category.repository';
-import { AddProductQuantityDto } from './dto/add-product-quantity.dto';
+import { ProductColorRepository } from 'src/common/repositories/product-color.repository';
+import { QuantityDto } from './dto/quantity.dto';
 
 @Injectable()
 export class ProductsService {
@@ -18,39 +18,58 @@ export class ProductsService {
         @InjectRepository(ProductRepository)
         private productRepository: ProductRepository,
 
-        @InjectRepository(ProductInfoRepository)
-        private productInfoRepository: ProductInfoRepository,
+        @InjectRepository(ProductColorRepository)
+        private productColorRepository: ProductColorRepository,
 
         @InjectRepository(ProductSizeRepository)
-        private productSizeRepository: ProductSizeRepository,
-
-        @InjectRepository(CategoryRepository)
-        private categoryRepository: CategoryRepository
+        private productSizeRepository: ProductSizeRepository
     ) {}
-    
-    async getProducts(filterDto: GetProductsFilterDto, lang: string): Promise<ProductDto[]> {
+
+    async getProducts(filterDto: GetProductsFilterDto): Promise<ProductDto[]> {
         const query = this.productRepository.createQueryBuilder('product')
         query.select('product.id')
-        query.addSelect('info.name')
+        query.addSelect('product.name')
+        query.addSelect('brand.name')
         query.addSelect('product.image')
         query.addSelect('product.price')
-        query.addSelect('product.discount')
 
-        query.innerJoin('product.infos', 'info', 'info.lang = :lang', { lang })
-        query.innerJoin('product.sizes', 'size')
-
-        if (filterDto.categoryId) {
-            query.innerJoin('product.categories', 'category', 'category.id = :id', { id: filterDto.categoryId })
-        }
-
-        query.where('info.lang = :lang', { lang })
+        query.innerJoin('product.brand', 'brand')
+        query.innerJoin('product.colors', 'color')
+        query.innerJoin('color.sizes', 'size')
 
         if (filterDto.search) {
-            query.andWhere('(info.name ILIKE :search OR info.description ILIKE :search)', { search: `%${filterDto.search}%` })
+            query.andWhere(
+                '(product.name ILIKE :search OR product.description ILIKE :search OR brand.name ILIKE :search)',
+                { search: `%${filterDto.search}%` }
+            )
+        }
+
+        if (filterDto.brandId) {
+            query.andWhere('product.brandId = :brandId', { brandId: filterDto.brandId })
+        }
+
+        if (filterDto.typeId) {
+            query.andWhere('product.typeId = :typeId', { typeId: filterDto.typeId })
+        }
+
+        if (filterDto.genderId) {
+            query.andWhere('product.genderId = :genderId', { genderId: filterDto.genderId })
+        }
+
+        if (filterDto.seasonId) {
+            query.andWhere('product.seasonId = :seasonId', { seasonId: filterDto.seasonId })
         }
 
         if (filterDto.size) {
             query.andWhere('size.size = :size', { size: filterDto.size })
+        }
+
+        if (filterDto.minPrice) {
+            query.andWhere('product.price >= :minPrice', { minPrice: filterDto.minPrice })
+        }
+
+        if (filterDto.maxPrice) {
+            query.andWhere('product.price <= :maxPrice', { maxPrice: filterDto.maxPrice })
         }
 
         if (filterDto.skip) {
@@ -64,161 +83,209 @@ export class ProductsService {
         }
 
         const products = await query.getMany()
-        return products.map(product => {
-            const productDto = new ProductDto()
-            productDto.id = product.id
-            productDto.name = product.infos[0].name
-            productDto.image = product.image
-            productDto.price = product.price
-            productDto.discount = product.discount
-            return productDto
-        })
+        return products.map(product => ({
+            id: product.id,
+            name: product.name,
+            brand: product.brand.name,
+            image: product.image,
+            price: product.price
+        }))
     }
 
-    async getProduct(id: number, lang: string): Promise<ProductDto> {
-        const product = await this.productRepository.findOne(id, { relations: ['sizes', 'categories'] })
+    async getProduct(id: number): Promise<ProductDto> {
+        const query = this.productRepository.createQueryBuilder('product')
+        query.where('product.id = :id', { id })
+        query.innerJoinAndSelect('product.brand', 'brand')
+        query.innerJoinAndSelect('product.type', 'type')
+        query.innerJoinAndSelect('product.gender', 'gender')
+        query.innerJoinAndSelect('product.season', 'season')
+        query.innerJoinAndSelect('product.colors', 'productColor')
+        query.innerJoinAndSelect('productColor.color', 'color')
+        query.innerJoinAndSelect('productColor.sizes', 'size')
+
+        query.orderBy('size.size')
+        query.addOrderBy('productColor.colorId')
+
+        const product = await query.getOne()
 
         if (!product) {
             throw new NotFoundException('There is no product with this id', 'ProductNotFound')
-        }
-
-        let info = await this.productInfoRepository.findOne({ productId: id, lang: lang })
-        if (!info) {
-            info = await this.productInfoRepository.findOne({ productId: id, lang: 'ru' })
-            if (!info) {
-                info = await this.productInfoRepository.findOne({ productId: id })
-            }
         }
 
         return {
             id: product.id,
-            name: info.name,
-            description: info.description,
+            name: product.name,
+            description: product.description,
+            brandId: product.brandId,
+            brand: product.brand.name,
+            typeId: product.typeId,
+            type: product.type.name,
+            genderId: product.genderId,
+            gender: product.gender.name,
+            seasonId: product.seasonId,
+            season: product.season.name,
             image: product.image,
             volumeModel: product.volumeModel,
             price: product.price,
-            discount: product.discount,
-            sizes: product.sizes.map(size => ({
-                size: size.size,
-                quantity: size.quantity
-            })),
-            categoryIds: product.categories.map(category => category.id)
+            sizes: product.colors.length > 0 ? product.colors[0].sizes.map(size => size.size).sort() : [],
+            colors: product.colors.map(color => ({
+                colorId: color.colorId,
+                color: color.color.name,
+                texture: color.texture
+            }))
         }
+    }
+
+    async getQuantities(id: number): Promise<QuantityDto[]> {
+        const colors = await this.productColorRepository.find({ productId: id })
+
+        const query = this.productSizeRepository.createQueryBuilder('size')
+        query.where('size.colorId IN (:...colorIds)', { colorIds: colors.map(color => color.id) })
+
+        query.innerJoinAndSelect('size.color', 'productColor')
+        query.innerJoinAndSelect('productColor.color', 'color')
+
+        query.orderBy('size.size')
+        query.addOrderBy('productColor.colorId')
+
+        const sizes = await query.getMany()
+
+        return sizes.map(size => ({
+            size: size.size,
+            colorId: size.color.colorId,
+            color: size.color.color.name,
+            quantity: size.quantity
+        }))
     }
 
     async createProduct(createProductDto: CreateProductDto): Promise<{ id: number }> {
         const product = new Product()
+        product.name = createProductDto.name
+        product.description = createProductDto.description
+        product.brandId = createProductDto.brandId
+        product.typeId = createProductDto.typeId
+        product.genderId = createProductDto.genderId
+        product.seasonId = createProductDto.seasonId
         product.image = createProductDto.image
         product.volumeModel = createProductDto.volumeModel
         product.price = createProductDto.price
         product.discount = 0 //createProductDto.discount
-        const query = this.categoryRepository.createQueryBuilder('category')
-        query.where('category.id IN (:...ids)', { ids: createProductDto.categoryIds })
-        const categories = await query.getMany()
-        product.categories = categories
+        product.liningMaterial = createProductDto.liningMaterial
+        product.soleMaterial = createProductDto.soleMaterial
+        product.insoleMaterial = createProductDto.insoleMaterial
         await product.save()
 
-        const productInfo = new ProductInfo()
-        productInfo.productId = product.id
-        productInfo.lang = createProductDto.lang
-        productInfo.name = createProductDto.name
-        productInfo.description = createProductDto.description
-        await productInfo.save()
+        for (const color of createProductDto.colors) {
+            const productColor = new ProductColor()
+            productColor.productId = product.id
+            productColor.colorId = color.colorId
+            productColor.texture = color.texture
+            await productColor.save()
 
-        for (const size of createProductDto.sizes) {
-            const productSize = new ProductSize()
-            productSize.productId = product.id
-            productSize.size = size
-            productSize.quantity = 0
-            await productSize.save()
-        }
-
-        return { id: product.id }
-    }
-
-    async updateProduct(id: number, createProductDto: CreateProductDto): Promise<{ id: number }> {
-        const product = await this.productRepository.findOne(id)
-        if (!product) {
-            throw new NotFoundException('There is no product with this id', 'ProductNotFound')
-        }
-
-        product.image = createProductDto.image
-        product.volumeModel = createProductDto.volumeModel
-        product.price = createProductDto.price
-        product.discount = 0 //createProductDto.discount
-        const categoriesQuery = this.categoryRepository.createQueryBuilder('category')
-        categoriesQuery.where('category.id IN (:...ids)', { ids: createProductDto.categoryIds })
-        const categories = await categoriesQuery.getMany()
-        product.categories = categories
-        await product.save()
-
-        let productInfo = await this.productInfoRepository.findOne({ productId: id, lang: createProductDto.lang })
-        if (!productInfo) {
-            productInfo = new ProductInfo()
-            productInfo.productId = id
-            productInfo.lang = createProductDto.lang
-        }
-
-        productInfo.name = createProductDto.name
-        productInfo.description = createProductDto.description
-        await productInfo.save()
-
-        const query = this.productSizeRepository.createQueryBuilder('size')
-        query.where('size.productId = :id', { id })
-        query.andWhere('size.size NOT IN (:...sizes)', { sizes: createProductDto.sizes })
-        const deletedSizes = await query.getMany()
-        for (const size of deletedSizes) {
-            await size.remove()
-        }
-
-        for (const size of createProductDto.sizes) {
-            let productSize = await this.productSizeRepository.findOne({ productId: id, size })
-            if (!productSize) {
-                productSize = new ProductSize()
-                productSize.productId = product.id
+            for (const size of createProductDto.sizes) {
+                const productSize = new ProductSize()
+                productSize.colorId = productColor.id
                 productSize.size = size
                 productSize.quantity = 0
                 await productSize.save()
             }
         }
 
-        return { id }
+        return { id: product.id }
     }
 
-    async updateProductPrice(id: number, price: number): Promise<{ id: number }> {
+    async updateProduct(id: number, updateProductDto: CreateProductDto): Promise<{ id: number }> {
         const product = await this.productRepository.findOne(id)
-
         if (!product) {
             throw new NotFoundException('There is no product with this id', 'ProductNotFound')
         }
 
-        product.price = price
+        product.name = updateProductDto.name
+        product.description = updateProductDto.description
+        product.brandId = updateProductDto.brandId
+        product.typeId = updateProductDto.typeId
+        product.genderId = updateProductDto.genderId
+        product.seasonId = updateProductDto.seasonId
+        product.image = updateProductDto.image
+        product.volumeModel = updateProductDto.volumeModel
+        product.price = updateProductDto.price
+        product.liningMaterial = updateProductDto.liningMaterial
+        product.soleMaterial = updateProductDto.soleMaterial
+        product.insoleMaterial = updateProductDto.insoleMaterial
         await product.save()
+
+        const query = this.productColorRepository.createQueryBuilder('color')
+        query.where('color.productId = :id', { id })
+        query.andWhere('color.colorId NOT IN (:...colorIds)', { colorIds: updateProductDto.colors.map(color => color.colorId) })
+        const deletedColors = await query.getMany()
+        await this.productColorRepository.remove(deletedColors)
+
+        for (const color of updateProductDto.colors) {
+            let productColor = await this.productColorRepository.findOne({ productId: id, colorId: color.colorId })
+
+            if (productColor) {
+                productColor.texture = color.texture
+                await productColor.save()
+
+                const query = this.productSizeRepository.createQueryBuilder('size')
+                query.where('size.colorId = :colorId', { colorId: productColor.id })
+                query.andWhere('size.size NOT IN (:...sizes)', { sizes: updateProductDto.sizes })
+                const deletedSizes = await query.getMany()
+                await this.productSizeRepository.remove(deletedSizes)
+
+                for (const size of updateProductDto.sizes) {
+                    let productSize = await this.productSizeRepository.findOne({ size, colorId: productColor.id })
+                    if (!productSize) {
+                        productSize = new ProductSize()
+                        productSize.colorId = productColor.id
+                        productSize.size = size
+                        productSize.quantity = 0
+                        await productSize.save()
+                    }
+                }
+
+            } else {
+                productColor = new ProductColor()
+                productColor.productId = id
+                productColor.colorId = color.colorId
+                productColor.texture = color.texture
+                await productColor.save()
+
+                for (const size of updateProductDto.sizes) {
+                    const productSize = new ProductSize()
+                    productSize.colorId = productColor.id
+                    productSize.size = size
+                    productSize.quantity = 0
+                    await productSize.save()
+                }
+            }
+        }
 
         return { id }
     }
 
-    /*async updateProductDiscount(id: number, discount: number): Promise<{ id: number }> {
+    async partialUpdateProductDto(id: number, updateProductDto: PartialUpdateProductDto): Promise<{ id: number }> {
         const product = await this.productRepository.findOne(id)
-
         if (!product) {
             throw new NotFoundException('There is no product with this id', 'ProductNotFound')
         }
 
-        product.discount = discount
+        product.price = updateProductDto.price
         await product.save()
 
-        return { id }
-    }*/
+        for (const quantity of updateProductDto.quantities) {
+            const query = this.productSizeRepository.createQueryBuilder('size')
+            query.where('size.size = :size', { size: quantity.size })
+            query.innerJoinAndSelect(
+                'size.color', 'color', 'color.productId = :productId AND color.colorId = :colorId',
+                { productId: id, colorId: quantity.colorId }
+            )
 
-    async addProductQuantity(id: number, updateQuantityDto: AddProductQuantityDto): Promise<{ id: number }> {
-        const productSize = await this.productSizeRepository.findOne({ productId: id, size: updateQuantityDto.size })
-        if (!productSize) {
-            throw new NotFoundException('The product with this id does not have this size', 'ProductSizeNotFound')
+            const size = await query.getOne()
+            size.quantity = quantity.quantity
+
+            await size.save()
         }
-
-        productSize.quantity += updateQuantityDto.quantity
-        await productSize.save()
 
         return { id }
     }

@@ -1,78 +1,38 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { CategoryInfo } from 'src/common/entities/category-info.entity';
-import { Category } from 'src/common/entities/category.entity';
-import { CategoryInfoRepository } from 'src/common/repositories/category-info.repository';
-import { CategoryRepository } from 'src/common/repositories/category.repository';
-import { CategoryDto } from './dto/category.dto';
-import { CreateCategoryDto } from './dto/create-category.dto';
+import { BrandRepository } from 'src/common/repositories/brand.repository';
+import { ColorRepository } from 'src/common/repositories/color.repository';
+import { GenderRepository } from 'src/common/repositories/gender.repository';
+import { SeasonRepository } from 'src/common/repositories/season.repository';
+import { ShoeTypeRepository } from 'src/common/repositories/shoe-type.repository';
+import { CategoriesDto } from './dto/categories.dto';
 
 @Injectable()
 export class CategoriesService {
     constructor(
-        @InjectRepository(CategoryRepository)
-        private categoryRepository: CategoryRepository,
+        @InjectRepository(BrandRepository)
+        private brandRepository: BrandRepository,
 
-        @InjectRepository(CategoryInfoRepository)
-        private categoryInfoRepository: CategoryInfoRepository,
+        @InjectRepository(ColorRepository)
+        private colorRepository: ColorRepository,
+
+        @InjectRepository(GenderRepository)
+        private genderRepository: GenderRepository,
+
+        @InjectRepository(SeasonRepository)
+        private seasonRepository: SeasonRepository,
+
+        @InjectRepository(ShoeTypeRepository)
+        private shoeTypeRepository: ShoeTypeRepository
     ) {}
-    
-    async getCategories(lang: string): Promise<CategoryDto[]> {
-        const categories = await this.categoryRepository.find({ relations: ['infos'] })
-        return categories.map(category => {
-            let info = category.infos.find(info => info.lang === lang)
-            if (!info) {
-                info = category.infos.find(info => info.lang === 'ru')
-                if (!info) {
-                    info = category.infos[0]
-                }
-            }
 
-            return {
-                id: category.id,
-                name: info.name
-            }
-        })
-    }
-
-    async createCategory(createCategoryDto: CreateCategoryDto): Promise<{ id: number }> {
-        const category = new Category()
-        await category.save()
-
-        const categoryInfo = new CategoryInfo()
-        categoryInfo.categoryId = category.id
-        categoryInfo.lang = createCategoryDto.lang
-        categoryInfo.name = createCategoryDto.name
-        await categoryInfo.save()
-
-        return { id: category.id }
-    }
-
-    async updateCategory(id: number, createCategoryDto: CreateCategoryDto): Promise<{ id: number }> {
-        const category = await this.categoryRepository.findOne(id)
-        if (!category) {
-            throw new NotFoundException('There is no category with this id', 'CategoryNotFound')
+    async getCategories(): Promise<CategoriesDto> {
+        return {
+            brands: await this.brandRepository.find({ order: { id: 'ASC' } }),
+            colors: await this.colorRepository.find({ order: { id: 'ASC' } }),
+            genders: await this.genderRepository.find({ order: { id: 'ASC' } }),
+            seasons: await this.seasonRepository.find({ order: { id: 'ASC' } }),
+            shoeTypes: await this.shoeTypeRepository.find({ order: { id: 'ASC' } }),
         }
-
-        let categoryInfo = await this.categoryInfoRepository.findOne({ categoryId: id, lang: createCategoryDto.lang })
-        if (!categoryInfo) {
-            categoryInfo = new CategoryInfo()
-            categoryInfo.categoryId = id
-            categoryInfo.lang = createCategoryDto.lang
-        }
-
-        categoryInfo.name = createCategoryDto.name
-        await categoryInfo.save()
-
-        return { id }
-    }
-
-    async deleteCategory(id: number): Promise<{ message: string }> {
-        const result = await this.categoryRepository.delete(id)
-        if (result.affected == 0) {
-            throw new NotFoundException('There is no category with this id', 'CategoryNotFound')
-        }
-
-        return { message: 'Deleted' }
     }
 }

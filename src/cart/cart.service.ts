@@ -17,7 +17,7 @@ export class CartService {
         private productSizeRepository: ProductSizeRepository
     ) {}
 
-    async getCartItems(user: User, lang: string): Promise<CartItemDto[]> {
+    /*async getCartItems(user: User, lang: string): Promise<CartItemDto[]> {
         const query = this.cartItemRepository.createQueryBuilder('item')
         query.select('item.productId')
         query.addSelect('item.size')
@@ -53,9 +53,9 @@ export class CartService {
                 quantity: item.quantity
             }
         })
-    }
+    }*/
 
-    async addToCart(user: User, addToCartDto: AddToCartDto): Promise<{ message: string }> {
+    /*async addToCart(user: User, addToCartDto: AddToCartDto): Promise<{ message: string }> {
         const productSize = await this.productSizeRepository.findOne({
             productId: addToCartDto.productId,
             size: addToCartDto.size
@@ -102,7 +102,7 @@ export class CartService {
         await item.save()
 
         return { message: 'Added' }
-    }
+    }*/
 
     async deleteFromCart(user: User, deleteFromCartDto: AddToCartDto): Promise<{ message: string }> {
         let item = await this.cartItemRepository.findOne({

@@ -6,7 +6,6 @@ export class Role extends BaseEntity {
     @PrimaryGeneratedColumn()
     id: number
 
-    @Index({ unique: true })
     @Column()
     name: string
 

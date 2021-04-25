@@ -7,10 +7,10 @@ import * as bcrypt from 'bcrypt';
 import { JwtPayload } from './jwt-payload';
 import { JwtService } from '@nestjs/jwt';
 import { SignInDto } from './dto/sign-in.dto';
-import { ROLE_PERMISSIONS } from 'src/config/constants';
 import { AuthResultDto } from './dto/auth-result.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { UpdateAddressDto } from './dto/update-address.dto';
+import { USER_ROLE_ID } from 'src/config/constants';
 
 @Injectable()
 export class AuthService {
@@ -28,7 +28,8 @@ export class AuthService {
         user.firstName = signUpDto.firstName
         user.lastName = signUpDto.lastName
         user.address = signUpDto.address
-        user.roleId = 1
+        user.postalCode = signUpDto.postalCode
+        user.roleId = USER_ROLE_ID
 
         try {
             await user.save()
@@ -59,8 +60,7 @@ export class AuthService {
         return {
             accessToken,
             id: user.id,
-            role: user.role.name,
-            permissions: ROLE_PERMISSIONS[user.role.name]
+            role: user.role.name
         }
     }
 

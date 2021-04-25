@@ -1,6 +1,5 @@
 import { BaseEntity, Column, Entity, Index, ManyToOne, OneToMany, PrimaryGeneratedColumn, RelationId } from "typeorm"
 import { CartItem } from "./cart-item.entity"
-import * as bcrypt from 'bcrypt';
 import { Role } from "./role.entity";
 import { Order } from "./order.entity";
 
@@ -35,6 +34,7 @@ export class User extends BaseEntity {
     role: Role
 
     @Column()
+    @Index()
     @RelationId((user: User) => user.role)
     roleId: number
 
