@@ -11,15 +11,15 @@ import { CartItemDto } from './dto/cart-item.dto';
 export class CartController {
     constructor(private cartService: CartService) {}
 
-    /*@Get()
-    getCartItems(@GetUser() user: User, @GetLang() lang: string): Promise<CartItemDto[]> {
-        return this.cartService.getCartItems(user, lang)
-    }*/
+    @Get()
+    getCartItems(@GetUser() user: User): Promise<CartItemDto[]> {
+        return this.cartService.getCartItems(user)
+    }
 
-    /*@Post()
+    @Post()
     addToCart(@GetUser() user: User, @Body(ValidationPipe) addToCartDto: AddToCartDto): Promise<{ message: string }> {
         return this.cartService.addToCart(user, addToCartDto)
-    }*/
+    }
 
     @Delete()
     deleteFromCart(@GetUser() user: User, @Body(ValidationPipe) deleteFromCartDto: AddToCartDto): Promise<{ message: string }> {

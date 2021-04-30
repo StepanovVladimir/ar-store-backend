@@ -17,52 +17,53 @@ export class CartService {
         private productSizeRepository: ProductSizeRepository
     ) {}
 
-    /*async getCartItems(user: User, lang: string): Promise<CartItemDto[]> {
+    async getCartItems(user: User): Promise<CartItemDto[]> {
         const query = this.cartItemRepository.createQueryBuilder('item')
         query.select('item.productId')
         query.addSelect('item.size')
+        query.addSelect('item.colorId')
+        query.addSelect('color.name')
         query.addSelect('item.quantity')
+        query.addSelect('product.name')
+        query.addSelect('brand.name')
         query.addSelect('product.image')
         query.addSelect('product.price')
-        query.addSelect('product.discount')
-        query.addSelect('info.name')
 
         query.where('item.userId = :userId', { userId: user.id })
 
+        query.innerJoin('item.color', 'color')
         query.innerJoin('item.product', 'product')
-        query.innerJoin('product.infos', 'info')
+        query.innerJoin('product.brand', 'brand')
 
         const items = await query.getMany()
 
         return items.map(item => {
-            let info = item.product.infos.find(info => info.lang === lang)
-            if (!info) {
-                info = item.product.infos.find(info => info.lang === 'ru')
-                if (!info) {
-                    info = item.product.infos[0]
-                }
-            }
-
             return {
                 productId: item.productId,
-                name: info.name,
+                name: item.product.name,
+                brand: item.product.brand.name,
                 image: item.product.image,
                 price: item.product.price,
-                //discount: item.product.discount,
                 size: item.size,
+                colorId: item.colorId,
+                color: item.color.name,
                 quantity: item.quantity
             }
         })
-    }*/
+    }
 
-    /*async addToCart(user: User, addToCartDto: AddToCartDto): Promise<{ message: string }> {
-        const productSize = await this.productSizeRepository.findOne({
-            productId: addToCartDto.productId,
-            size: addToCartDto.size
-        })
+    async addToCart(user: User, addToCartDto: AddToCartDto): Promise<{ message: string }> {
+        const query = this.productSizeRepository.createQueryBuilder('size')
+        query.where('size.size = :size', { size: addToCartDto.size })
+        query.innerJoinAndSelect(
+            'size.color', 'color', 'color.productId = :productId AND color.colorId = :colorId',
+            { productId: addToCartDto.productId, colorId: addToCartDto.colorId }
+        )
+
+        const productSize = await query.getOne()
 
         if (!productSize) {
-            throw new NotFoundException('A product with this id doesn\'t have this size', 'ProductSizeNotFound')
+            throw new NotFoundException('A product with this id doesn\'t have this size and colorId', 'ProductSizeAndColorNotFound')
         }
 
         const items = await this.cartItemRepository.find({ userId: user.id })
@@ -78,7 +79,8 @@ export class CartService {
         let item = await this.cartItemRepository.findOne({
             userId: user.id,
             productId: addToCartDto.productId,
-            size: addToCartDto.size
+            size: addToCartDto.size,
+            colorId: addToCartDto.colorId
         })
 
         if (!item) {
@@ -87,9 +89,10 @@ export class CartService {
             }
 
             item = new CartItem()
-            item.userId = user.id,
-            item.productId = addToCartDto.productId,
-            item.size = addToCartDto.size,
+            item.userId = user.id
+            item.productId = addToCartDto.productId
+            item.size = addToCartDto.size
+            item.colorId = addToCartDto.colorId
             item.quantity = 1
         } else {
             if (productSize.quantity <= item.quantity) {
@@ -102,17 +105,18 @@ export class CartService {
         await item.save()
 
         return { message: 'Added' }
-    }*/
+    }
 
     async deleteFromCart(user: User, deleteFromCartDto: AddToCartDto): Promise<{ message: string }> {
         let item = await this.cartItemRepository.findOne({
             userId: user.id,
             productId: deleteFromCartDto.productId,
-            size: deleteFromCartDto.size
+            size: deleteFromCartDto.size,
+            colorId: deleteFromCartDto.colorId
         })
 
         if (!item) {
-            throw new NotFoundException('There is no product with this id and size in the cart', 'CartItemNotFound')
+            throw new NotFoundException('There is no product with this id, size and colorId in the cart', 'CartItemNotFound')
         }
 
         if (item.quantity > 1) {

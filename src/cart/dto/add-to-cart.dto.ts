@@ -6,4 +6,7 @@ export class AddToCartDto {
 
     @IsNotEmpty()
     size: number
+
+    @IsNotEmpty()
+    colorId: number
 }

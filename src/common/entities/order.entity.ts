@@ -1,4 +1,4 @@
-import { BaseEntity, Column, CreateDateColumn, Entity, Index, ManyToOne, OneToMany, PrimaryGeneratedColumn, RelationId } from "typeorm"
+import { BaseEntity, Column, CreateDateColumn, Entity, Index, ManyToOne, OneToMany, PrimaryGeneratedColumn, RelationId, UpdateDateColumn } from "typeorm"
 import { OrderItem } from "./order-item.entity"
 import { OrderStatus } from "./order-status.entity"
 import { User } from "./user.entity"
@@ -17,7 +17,10 @@ export class Order extends BaseEntity {
 
     @CreateDateColumn()
     @Index()
-    time: Date
+    createdTime: Date
+
+    @UpdateDateColumn()
+    updatedTime: Date;
 
     @Column()
     address: string
@@ -31,6 +34,9 @@ export class Order extends BaseEntity {
     @Column()
     @RelationId((order: Order) => order.status)
     statusId: number
+
+    @Column({ nullable: true })
+    trackCode: string
 
     @OneToMany(() => OrderItem, item => item.order, { onUpdate: "CASCADE", onDelete: "CASCADE" })
     items: OrderItem[]

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Post, Put, Query, UseGuards, ValidationPipe } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Query, UseGuards, ValidationPipe } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { CreateProductDto } from './dto/create-product.dto';
 import { GetProductsFilterDto } from './dto/get-products-filter.dto';
@@ -18,7 +18,7 @@ export class ProductsController {
 
     @Get()
     getProducts(
-        @Query(ValidationPipe) filterDto: GetProductsFilterDto
+        @Query() filterDto: GetProductsFilterDto
     ): Promise<ProductDto[]> {
         return this.productsService.getProducts(filterDto)
     }
@@ -60,5 +60,10 @@ export class ProductsController {
         @Body(ValidationPipe, ProductQuantitiesValidationPipe) updateProductDto: PartialUpdateProductDto
     ): Promise<{ id: number }> {
         return this.productsService.partialUpdateProductDto(id, updateProductDto)
+    }
+
+    @Delete('/:id')
+    deleteProduct(@Param('id', ParseIntPipe) id: number): Promise<{ id: number }> {
+        return this.productsService.deleteProduct(id)
     }
 }

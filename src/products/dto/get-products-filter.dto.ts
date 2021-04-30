@@ -9,6 +9,6 @@ export class GetProductsFilterDto {
     minPrice: number
     maxPrice: number
 
-    skip: number
+    page: number
     take: number
 }

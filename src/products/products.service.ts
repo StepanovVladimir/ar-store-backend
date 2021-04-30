@@ -72,8 +72,12 @@ export class ProductsService {
             query.andWhere('product.price <= :maxPrice', { maxPrice: filterDto.maxPrice })
         }
 
-        if (filterDto.skip) {
-            query.skip(filterDto.skip)
+        if (filterDto.page) {
+            if (filterDto.take) {
+                query.skip(filterDto.take * (filterDto.page - 1))
+            } else {
+                query.skip(20 * (filterDto.page - 1))
+            }
         }
 
         if (filterDto.take) {
@@ -99,9 +103,9 @@ export class ProductsService {
         query.innerJoinAndSelect('product.type', 'type')
         query.innerJoinAndSelect('product.gender', 'gender')
         query.innerJoinAndSelect('product.season', 'season')
-        query.innerJoinAndSelect('product.colors', 'productColor')
-        query.innerJoinAndSelect('productColor.color', 'color')
-        query.innerJoinAndSelect('productColor.sizes', 'size')
+        query.leftJoinAndSelect('product.colors', 'productColor')
+        query.leftJoinAndSelect('productColor.color', 'color')
+        query.leftJoinAndSelect('productColor.sizes', 'size')
 
         query.orderBy('size.size')
         query.addOrderBy('productColor.colorId')
@@ -286,6 +290,13 @@ export class ProductsService {
 
             await size.save()
         }
+
+        return { id }
+    }
+
+    async deleteProduct(id: number): Promise<{ id: number }> {
+        const colors = await this.productColorRepository.find({ productId: id })
+        await this.productColorRepository.remove(colors)
 
         return { id }
     }

@@ -6,10 +6,12 @@ export class OrderDto {
     email: string
     firstName: string
     lastName: string
-    time: Date
+    createdTime: Date
+    updatedTime: Date
     address: string
     postalCode: string
     status: string
+    trackCode: string
     fullPrice: number
     items: OrderItemDto[]
 }
