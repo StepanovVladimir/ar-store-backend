@@ -23,6 +23,9 @@ export function getTypeormConfig(): TypeOrmModuleOptions {
         password: process.env.RDS_PASSWORD || process.env.DB_PASSWORD,
         database: process.env.RDS_DB_NAME || process.env.DB_NAME,
         entities: [Product, ProductColor, ProductSize, ShoeType, Color, Brand, Gender, Season, User, Role, CartItem, Order, OrderItem, OrderStatus],
-        synchronize: true
+        synchronize: true,
+        ssl: {
+            rejectUnauthorized: false
+        }
     }
 }
