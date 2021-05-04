@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Put, UseGuards, ValidationPipe } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put, UseGuards, ValidationPipe } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { GetUser } from 'src/common/decorators/get-user.decorator';
 import { User } from 'src/common/entities/user.entity';
@@ -21,6 +21,16 @@ export class AuthController {
     @Post('/signin')
     signIn(@Body(ValidationPipe) signInDto: SignInDto): Promise<{ accessToken: string }> {
         return this.authService.signIn(signInDto)
+    }
+
+    @Get('/confirmation/:token')
+    confirmEmail(@Param('token') token: string): Promise<string> {
+        return this.authService.confirmEmail(token)
+    }
+
+    @Post('/resubmit')
+    resubmitConfirmMessage(@Body(ValidationPipe) signInDto: SignInDto): Promise<{ id: number }> {
+        return this.authService.resubmitConfirmMessage(signInDto)
     }
 
     @Put('/change-password')

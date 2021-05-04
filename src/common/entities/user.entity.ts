@@ -25,6 +25,9 @@ export class User extends BaseEntity {
     lastName: string
 
     @Column({ nullable: true })
+    confirmed: boolean
+
+    @Column({ nullable: true })
     address: string
 
     @Column({ nullable: true })

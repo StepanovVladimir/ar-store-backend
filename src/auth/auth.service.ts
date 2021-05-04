@@ -11,6 +11,7 @@ import { AuthResultDto } from './dto/auth-result.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { UpdateAddressDto } from './dto/update-address.dto';
 import { USER_ROLE_ID } from 'src/config/constants';
+import { sendEmail } from 'src/common/utils/sendEmail';
 
 @Injectable()
 export class AuthService {
@@ -27,6 +28,7 @@ export class AuthService {
         user.passwordHash = await bcrypt.hash(signUpDto.password, user.salt)
         user.firstName = signUpDto.firstName
         user.lastName = signUpDto.lastName
+        user.confirmed = false
         user.address = signUpDto.address
         user.postalCode = signUpDto.postalCode
         user.roleId = USER_ROLE_ID
@@ -41,6 +43,15 @@ export class AuthService {
             }
         }
 
+        const payload: JwtPayload = {
+            id: user.id
+        }
+
+        const accessToken = await this.jwtService.sign(payload)
+        const url = `${process.env.HOST}/auth/confirmation/${accessToken}`
+
+        await sendEmail(user.email, url)
+
         return { id: user.id }
     }
 
@@ -49,6 +60,10 @@ export class AuthService {
 
         if (!user || !await this.validatePassword(user, signInDto.password)) {
             throw new UnauthorizedException()
+        }
+
+        if (!user.confirmed) {
+            throw new UnauthorizedException('Email not confirmed', 'EmailNotConfirmed')
         }
 
         const payload: JwtPayload = {
@@ -62,6 +77,41 @@ export class AuthService {
             id: user.id,
             role: user.role.name
         }
+    }
+
+    async confirmEmail(token: string): Promise<string> {
+        const payload: JwtPayload = this.jwtService.verify<JwtPayload>(token)
+
+        const user = await this.usersRepository.findOne(payload.id)
+
+        user.confirmed = true
+
+        await user.save()
+
+        return 'Email successfully confirmed'
+    }
+
+    async resubmitConfirmMessage(signInDto: SignInDto): Promise<{ id: number }> {
+        const user = await this.usersRepository.findOne({ email: signInDto.email.toLowerCase() })
+
+        if (!user || !await this.validatePassword(user, signInDto.password)) {
+            throw new UnauthorizedException()
+        }
+
+        if (user.confirmed) {
+            throw new BadRequestException('Email already confirmed', 'EmailAlreadyConfirmed')
+        }
+
+        const payload: JwtPayload = {
+            id: user.id
+        }
+
+        const accessToken = await this.jwtService.sign(payload)
+        const url = `${process.env.HOST}/auth/confirmation/${accessToken}`
+
+        await sendEmail(user.email, url)
+
+        return { id: user.id }
     }
 
     async changePassword(user: User, changePasswordDto: ChangePasswordDto): Promise<{ message: string }> {

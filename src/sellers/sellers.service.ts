@@ -30,6 +30,7 @@ export class SellersService {
         user.passwordHash = await bcrypt.hash(this.DEFAULT_PASSWORD, user.salt)
         user.firstName = registerSellerDto.firstName
         user.lastName = registerSellerDto.lastName
+        user.confirmed = true
         user.roleId = SELLER_ROLE_ID
 
         try {

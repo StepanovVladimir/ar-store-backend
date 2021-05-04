@@ -15,17 +15,30 @@ import { User } from 'src/common/entities/user.entity'
 import { Gender } from 'src/common/entities/gender.entity'
 
 export function getTypeormConfig(): TypeOrmModuleOptions {
-    return {
-        type: 'postgres',
-        host: process.env.RDS_HOSTNAME || process.env.DB_HOST,
-        port: parseInt(process.env.RDS_PORT) || parseInt(process.env.DB_PORT),
-        username: process.env.RDS_USERNAME || process.env.DB_USERNAME,
-        password: process.env.RDS_PASSWORD || process.env.DB_PASSWORD,
-        database: process.env.RDS_DB_NAME || process.env.DB_NAME,
-        entities: [Product, ProductColor, ProductSize, ShoeType, Color, Brand, Gender, Season, User, Role, CartItem, Order, OrderItem, OrderStatus],
-        synchronize: true,
-        ssl: {
-            rejectUnauthorized: false
+    if (process.env.DB_HOST === 'localhost') {
+        return {
+            type: 'postgres',
+            host: process.env.DB_HOST,
+            port: parseInt(process.env.DB_PORT),
+            username: process.env.DB_USERNAME,
+            password: process.env.DB_PASSWORD,
+            database: process.env.DB_NAME,
+            entities: [Product, ProductColor, ProductSize, ShoeType, Color, Brand, Gender, Season, User, Role, CartItem, Order, OrderItem, OrderStatus],
+            synchronize: true
+        }
+    } else {
+        return {
+            type: 'postgres',
+            host: process.env.DB_HOST,
+            port: parseInt(process.env.DB_PORT),
+            username: process.env.DB_USERNAME,
+            password: process.env.DB_PASSWORD,
+            database: process.env.DB_NAME,
+            entities: [Product, ProductColor, ProductSize, ShoeType, Color, Brand, Gender, Season, User, Role, CartItem, Order, OrderItem, OrderStatus],
+            synchronize: true,
+            ssl: {
+                rejectUnauthorized: false
+            }
         }
     }
 }
