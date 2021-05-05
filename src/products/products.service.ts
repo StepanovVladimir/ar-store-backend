@@ -171,7 +171,7 @@ export class ProductsService {
         product.genderId = createProductDto.genderId
         product.seasonId = createProductDto.seasonId
         product.image = createProductDto.image
-        product.volumeModel = createProductDto.volumeModel
+        //product.volumeModel = createProductDto.volumeModel
         product.price = createProductDto.price
         product.discount = 0 //createProductDto.discount
         product.liningMaterial = createProductDto.liningMaterial
@@ -211,7 +211,7 @@ export class ProductsService {
         product.genderId = updateProductDto.genderId
         product.seasonId = updateProductDto.seasonId
         product.image = updateProductDto.image
-        product.volumeModel = updateProductDto.volumeModel
+        //product.volumeModel = updateProductDto.volumeModel
         product.price = updateProductDto.price
         product.liningMaterial = updateProductDto.liningMaterial
         product.soleMaterial = updateProductDto.soleMaterial

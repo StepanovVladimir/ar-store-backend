@@ -51,7 +51,7 @@ export class Product extends BaseEntity {
     @Column()
     image: string
 
-    @Column()
+    @Column({ nullable: true })
     volumeModel: string
 
     @Column()

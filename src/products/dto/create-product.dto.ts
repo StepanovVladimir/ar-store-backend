@@ -23,8 +23,8 @@ export class CreateProductDto {
     @IsNotEmpty()
     image: string
 
-    @IsNotEmpty()
-    volumeModel: string
+    /*@IsNotEmpty()
+    volumeModel: string*/
 
     @IsNotEmpty()
     liningMaterial: string
@@ -38,11 +38,6 @@ export class CreateProductDto {
     @IsNotEmpty()
     @IsPositive()
     price: number
-
-/*    @IsNotEmpty()
-    @Min(0)
-    @Max(100)
-    discount: number*/
 
     sizes: number[]
 
