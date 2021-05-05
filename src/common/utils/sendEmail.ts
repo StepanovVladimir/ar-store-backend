@@ -9,7 +9,7 @@ export const sendEmail = async (email: string, link: string) => {
     }
   })
 
-  const info = await transporter.sendMail({
+  await transporter.sendMail({
     to: email,
     subject: 'Confirm Email',
     text: 'Hello world?',
