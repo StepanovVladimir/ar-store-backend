@@ -2,6 +2,7 @@ import { BaseEntity, Column, Entity, Index, ManyToOne, OneToMany, PrimaryGenerat
 import { CartItem } from "./cart-item.entity"
 import { Role } from "./role.entity";
 import { Order } from "./order.entity";
+import { Favorite } from "./favorite.entity";
 
 @Entity()
 export class User extends BaseEntity {
@@ -46,4 +47,7 @@ export class User extends BaseEntity {
 
     @OneToMany(() => Order, order => order.user, { onUpdate: "CASCADE", onDelete: "CASCADE" })
     orders: Order[]
+
+    @OneToMany(() => Favorite, favorite => favorite.user, { onUpdate: "CASCADE", onDelete: "CASCADE" })
+    favorites: Favorite[]
 }

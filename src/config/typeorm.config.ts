@@ -13,6 +13,7 @@ import { Role } from 'src/common/entities/role.entity'
 import { Season } from 'src/common/entities/season.entity'
 import { User } from 'src/common/entities/user.entity'
 import { Gender } from 'src/common/entities/gender.entity'
+import { Favorite } from 'src/common/entities/favorite.entity'
 
 export function getTypeormConfig(): TypeOrmModuleOptions {
     if (process.env.DB_HOST === 'localhost') {
@@ -23,7 +24,7 @@ export function getTypeormConfig(): TypeOrmModuleOptions {
             username: process.env.DB_USERNAME,
             password: process.env.DB_PASSWORD,
             database: process.env.DB_NAME,
-            entities: [Product, ProductColor, ProductSize, ShoeType, Color, Brand, Gender, Season, User, Role, CartItem, Order, OrderItem, OrderStatus],
+            entities: [Product, ProductColor, ProductSize, ShoeType, Color, Brand, Gender, Season, User, Role, CartItem, Order, OrderItem, OrderStatus, Favorite],
             synchronize: true
         }
     } else {
@@ -34,7 +35,7 @@ export function getTypeormConfig(): TypeOrmModuleOptions {
             username: process.env.DB_USERNAME,
             password: process.env.DB_PASSWORD,
             database: process.env.DB_NAME,
-            entities: [Product, ProductColor, ProductSize, ShoeType, Color, Brand, Gender, Season, User, Role, CartItem, Order, OrderItem, OrderStatus],
+            entities: [Product, ProductColor, ProductSize, ShoeType, Color, Brand, Gender, Season, User, Role, CartItem, Order, OrderItem, OrderStatus, Favorite],
             synchronize: true,
             ssl: {
                 rejectUnauthorized: false

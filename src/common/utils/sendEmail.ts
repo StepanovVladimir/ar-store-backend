@@ -13,6 +13,6 @@ export const sendEmail = async (email: string, link: string) => {
     to: email,
     subject: 'Confirm Email',
     text: 'Hello world?',
-    html: `Please click this email to confirm your email: <a href="${link}">Confirm email</a>`
+    html: `Please click this link to confirm your email: <a href="${link}">Confirm email</a>`
   })
 }

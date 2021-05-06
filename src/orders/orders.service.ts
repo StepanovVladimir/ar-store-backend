@@ -5,6 +5,7 @@ import { Order } from 'src/common/entities/order.entity';
 import { ProductSize } from 'src/common/entities/product-size.entity';
 import { User } from 'src/common/entities/user.entity';
 import { CartItemRepository } from 'src/common/repositories/cart-item.repository';
+import { OrderStatusRepository } from 'src/common/repositories/order-status.repository';
 import { OrderRepository } from 'src/common/repositories/order.repository';
 import { ProductSizeRepository } from 'src/common/repositories/product-size.repository';
 import { COMPLETED_STATUS_ID, DELIVERED_STATUS_ID, DELIVERING_STATUS_ID, PROCESSING_STATUS_ID, RETURN_STATUS_ID } from 'src/config/constants';
@@ -17,6 +18,9 @@ export class OrdersService {
     constructor(
         @InjectRepository(OrderRepository)
         private orderRepository: OrderRepository,
+
+        @InjectRepository(OrderStatusRepository)
+        private orderStatusRepository: OrderStatusRepository,
 
         @InjectRepository(CartItemRepository)
         private cartItemRepository: CartItemRepository,
@@ -339,13 +343,15 @@ export class OrdersService {
     }
 
     private async checkOrder(order: Order, date: Date): Promise<void> {
-        if (order.statusId === DELIVERED_STATUS_ID && (Number(date) - Number(order.updatedTime)) / 1000 / 60 / 60 / 24 > 2) {
+        if (order.statusId == DELIVERED_STATUS_ID && (Number(date) - Number(order.updatedTime)) / 1000 / 60 / 60 / 24 > 2) {
             order.statusId = COMPLETED_STATUS_ID
+            order.status = await this.orderStatusRepository.findOne(COMPLETED_STATUS_ID)
             await order.save()
         }
 
-        if (order.statusId === DELIVERING_STATUS_ID && (Number(date) - Number(order.updatedTime)) / 1000 / 60 / 60 / 24 > 14) {
+        if (order.statusId == DELIVERING_STATUS_ID && (Number(date) - Number(order.updatedTime)) / 1000 / 60 / 60 / 24 > 14) {
             order.statusId = COMPLETED_STATUS_ID
+            order.status = await this.orderStatusRepository.findOne(COMPLETED_STATUS_ID)
             await order.save()
         }
     }

@@ -8,6 +8,7 @@ import { AuthModule } from './auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
 import { getTypeormConfig } from './config/typeorm.config';
 import { SellersModule } from './sellers/sellers.module';
+import { FavoritesModule } from './favorites/favorites.module';
 
 @Module({
   imports: [
@@ -18,7 +19,8 @@ import { SellersModule } from './sellers/sellers.module';
     CartModule,
     OrdersModule,
     AuthModule,
-    SellersModule
+    SellersModule,
+    FavoritesModule
   ]
 })
 export class AppModule {}

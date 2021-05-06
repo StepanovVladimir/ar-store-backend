@@ -6,10 +6,11 @@ import { OrdersService } from './orders.service';
 import { OrdersController } from './orders.controller';
 import { CartItemRepository } from 'src/common/repositories/cart-item.repository';
 import { ProductSizeRepository } from 'src/common/repositories/product-size.repository';
+import { OrderStatusRepository } from 'src/common/repositories/order-status.repository';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([OrderRepository, CartItemRepository, ProductSizeRepository]),
+    TypeOrmModule.forFeature([OrderRepository, OrderStatusRepository, CartItemRepository, ProductSizeRepository]),
     AuthModule
   ],
   providers: [OrdersService],
