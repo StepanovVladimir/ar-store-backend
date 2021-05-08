@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Patch, Post, Put, Query, UseGuards, ValidationPipe } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Put, Query, UseGuards, ValidationPipe } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { GetUser } from 'src/common/decorators/get-user.decorator';
 import { HasRoles } from 'src/common/decorators/has-roles.decorator';
@@ -7,6 +7,7 @@ import { RolesGuard } from 'src/common/guards/roles.guard';
 import { SELLER_ROLE } from 'src/config/constants';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { EstimateOrderDto } from './dto/estimate-order.dto';
+import { EstimationDto } from './dto/estimation.dto';
 import { GetOrdersFilterDto } from './dto/get-orders-filter.dto';
 import { OrderDto } from './dto/order.dto';
 import { SendOrderDto } from './dto/send-order.dto';
@@ -27,8 +28,15 @@ export class OrdersController {
     @Get('/all')
     @HasRoles(SELLER_ROLE)
     @UseGuards(RolesGuard)
-    getAllOrders(@Query() filterDto: GetOrdersFilterDto) {
+    getAllOrders(@Query() filterDto: GetOrdersFilterDto): Promise<OrderDto[]> {
         return this.ordersService.getAllOrders(filterDto)
+    }
+
+    @Get('/comments')
+    @HasRoles(SELLER_ROLE)
+    @UseGuards(RolesGuard)
+    getComments(@Query() filterDto: GetOrdersFilterDto): Promise<EstimationDto[]> {
+        return this.ordersService.getComments(filterDto)
     }
 
     @Post()
@@ -39,6 +47,11 @@ export class OrdersController {
     @Post('/estimation')
     estimateProduct(@Body(ValidationPipe) estimateOrderDto: EstimateOrderDto, @GetUser() user: User): Promise<{ message: string }> {
         return this.ordersService.estimateProduct(estimateOrderDto, user)
+    }
+
+    @Delete('/comment/:id')
+    deleteComment(@Param('id', ParseIntPipe) id: number): Promise<{ id: number }> {
+        return this.ordersService.deleteComment(id)
     }
 
     @Patch('/:id/send')

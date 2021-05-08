@@ -8,6 +8,7 @@ import { ProductSizeRepository } from 'src/common/repositories/product-size.repo
 import { COMPLETED_STATUS_ID, DELIVERED_STATUS_ID, DELIVERING_STATUS_ID, PROCESSING_STATUS_ID, RETURNED_STATUS_ID, RETURN_STATUS_ID } from 'src/config/constants';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { EstimateOrderDto } from './dto/estimate-order.dto';
+import { EstimationDto } from './dto/estimation.dto';
 import { GetOrdersFilterDto } from './dto/get-orders-filter.dto';
 import { OrderDto } from './dto/order.dto';
 import { SendOrderDto } from './dto/send-order.dto';
@@ -135,6 +136,47 @@ export class OrdersService {
         return dtos
     }
 
+    async getComments(filterDto: GetOrdersFilterDto): Promise<EstimationDto[]> {
+        const query = this.orderRepository.createQueryBuilder('order')
+        query.select('order.id')
+        query.addSelect('user.email')
+        query.addSelect('user.firstName')
+        query.addSelect('user.lastName')
+        query.addSelect('order.estimation')
+        query.addSelect('order.comment')
+        query.addSelect('order.estimationDate')
+
+        query.where('order.comment IS NOT NULL')
+        query.innerJoin('order.user', 'user')
+        query.orderBy('order.estimationDate', 'DESC')
+
+        if (filterDto.page) {
+            if (filterDto.take) {
+                query.skip(filterDto.take * (filterDto.page - 1))
+            } else {
+                query.skip(20 * (filterDto.page - 1))
+            }
+        }
+
+        if (filterDto.take) {
+            query.take(filterDto.take)
+        } else {
+            query.take(20)
+        }
+
+        const comments = await query.getMany()
+
+        return comments.map(comment => ({
+            orderId: comment.id,
+            email: comment.user.email,
+            firstName: comment.user.firstName,
+            lastName: comment.user.lastName,
+            estimation: comment.estimation,
+            comment: comment.comment,
+            estimationDate: comment.estimationDate
+        }))
+    }
+
     async createOrder(createOrderDto: CreateOrderDto, user: User): Promise<{ id: number }> {
         if (!user.address || !user.postalCode) {
             throw new BadRequestException('The user does not have an address specified', 'NoAddress')
@@ -188,11 +230,29 @@ export class OrdersService {
         }
 
         order.estimation = estimateOrderDto.estimation
-        order.comment = estimateOrderDto.comment
+        if (estimateOrderDto.comment) {
+            order.comment = estimateOrderDto.comment
+        } else {
+            order.comment = null
+        }
+        
         order.estimationDate = new Date()
         await order.save()
 
         return { message: 'Estimated' }
+    }
+
+    async deleteComment(id: number): Promise<{ id: number }> {
+        const order = await this.orderRepository.findOne(id)
+
+        if (!order) {
+            throw new NotFoundException('There is no order with this id', 'OrderNotFound')
+        }
+
+        order.comment = null
+        await order.save()
+
+        return { id }
     }
 
     async sendOrder(id: number, sendOrderDto: SendOrderDto): Promise<{ id: number }> {

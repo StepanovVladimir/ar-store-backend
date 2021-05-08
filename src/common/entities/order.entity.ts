@@ -1,4 +1,4 @@
-import { BaseEntity, Column, CreateDateColumn, Entity, Index, ManyToOne, OneToMany, PrimaryGeneratedColumn, RelationId, UpdateDateColumn } from "typeorm"
+import { BaseEntity, Column, Entity, Index, ManyToOne, PrimaryGeneratedColumn, RelationId } from "typeorm"
 import { Color } from "./color.entity"
 import { OrderStatus } from "./order-status.entity"
 import { Product } from "./product.entity"
@@ -67,5 +67,6 @@ export class Order extends BaseEntity {
     comment: string
 
     @Column({ nullable: true })
+    @Index()
     estimationDate: Date
 }
