@@ -1,14 +1,13 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { OrderItem } from 'src/common/entities/order-item.entity';
 import { Order } from 'src/common/entities/order.entity';
-import { ProductSize } from 'src/common/entities/product-size.entity';
 import { User } from 'src/common/entities/user.entity';
-import { CartItemRepository } from 'src/common/repositories/cart-item.repository';
 import { OrderStatusRepository } from 'src/common/repositories/order-status.repository';
 import { OrderRepository } from 'src/common/repositories/order.repository';
 import { ProductSizeRepository } from 'src/common/repositories/product-size.repository';
-import { COMPLETED_STATUS_ID, DELIVERED_STATUS_ID, DELIVERING_STATUS_ID, PROCESSING_STATUS_ID, RETURN_STATUS_ID } from 'src/config/constants';
+import { COMPLETED_STATUS_ID, DELIVERED_STATUS_ID, DELIVERING_STATUS_ID, PROCESSING_STATUS_ID, RETURNED_STATUS_ID, RETURN_STATUS_ID } from 'src/config/constants';
+import { CreateOrderDto } from './dto/create-order.dto';
+import { EstimateOrderDto } from './dto/estimate-order.dto';
 import { GetOrdersFilterDto } from './dto/get-orders-filter.dto';
 import { OrderDto } from './dto/order.dto';
 import { SendOrderDto } from './dto/send-order.dto';
@@ -22,19 +21,22 @@ export class OrdersService {
         @InjectRepository(OrderStatusRepository)
         private orderStatusRepository: OrderStatusRepository,
 
-        @InjectRepository(CartItemRepository)
-        private cartItemRepository: CartItemRepository,
-
         @InjectRepository(ProductSizeRepository)
         private productSizeRepository: ProductSizeRepository
     ) {}
 
     async getOrders(user: User): Promise<OrderDto[]> {
-        const orders = await this.orderRepository.find({
-            where: { userId: user.id },
-            relations: ['user', 'status', 'items'],
-            order: { updatedTime: 'DESC' }
-        })
+        const query = this.orderRepository.createQueryBuilder('order')
+        query.where('order.userId = :userId', { userId: user.id })
+
+        query.innerJoinAndSelect('order.status', 'status')
+        query.innerJoinAndSelect('order.color', 'color')
+        query.innerJoinAndSelect('order.product', 'product')
+        query.innerJoinAndSelect('product.brand', 'brand')
+
+        query.orderBy('order.updatedTime', 'DESC')
+
+        const orders = await query.getMany()
 
         const date = new Date()
         const dtos: OrderDto[] = []
@@ -44,19 +46,23 @@ export class OrdersService {
             const dto = new OrderDto()
             dto.id = order.id
             dto.userId = order.userId
-            dto.email = order.user.email
-            dto.firstName = order.user.firstName
-            dto.lastName = order.user.lastName
             dto.createdTime = order.createdTime
             dto.updatedTime = order.updatedTime
             dto.address = order.address
             dto.postalCode = order.postalCode
             dto.status = order.status.name
             dto.trackCode = order.trackCode
-            dto.fullPrice = 0
-            order.items.forEach(item =>
-                dto.fullPrice += item.price * item.quantity
-            )
+            dto.productId = order.productId
+            dto.productName = order.product.name
+            dto.brand = order.product.brand.name
+            dto.image = order.product.image
+            dto.price = order.price
+            dto.colorId = order.colorId
+            dto.color = order.color.name
+            dto.size = order.size
+            dto.estimation = order.estimation
+            dto.comment = order.comment
+            dto.estimationDate = order.estimationDate
 
             dtos.push(dto)
         }
@@ -68,7 +74,9 @@ export class OrdersService {
         const query = this.orderRepository.createQueryBuilder('order')
         query.innerJoinAndSelect('order.user', 'user')
         query.innerJoinAndSelect('order.status', 'status')
-        query.innerJoinAndSelect('order.items', 'item')
+        query.innerJoinAndSelect('order.color', 'color')
+        query.innerJoinAndSelect('order.product', 'product')
+        query.innerJoinAndSelect('product.brand', 'brand')
 
         if (filterDto.status) {
             query.where('status.name = :status', { status: filterDto.status })
@@ -109,10 +117,17 @@ export class OrdersService {
             dto.postalCode = order.postalCode
             dto.status = order.status.name
             dto.trackCode = order.trackCode
-            dto.fullPrice = 0
-            order.items.forEach(item =>
-                dto.fullPrice += item.price * item.quantity
-            )
+            dto.productId = order.productId
+            dto.productName = order.product.name
+            dto.brand = order.product.brand.name
+            dto.image = order.product.image
+            dto.price = order.price
+            dto.colorId = order.colorId
+            dto.color = order.color.name
+            dto.size = order.size
+            dto.estimation = order.estimation
+            dto.comment = order.comment
+            dto.estimationDate = order.estimationDate
 
             dtos.push(dto)
         }
@@ -120,137 +135,64 @@ export class OrdersService {
         return dtos
     }
 
-    async getOrder(id: number, user: User): Promise<OrderDto> {
-        const query = this.orderRepository.createQueryBuilder('order')
-        query.select('order.id')
-        query.addSelect('order.createdTime')
-        query.addSelect('order.updatedTime')
-        query.addSelect('order.address')
-        query.addSelect('order.postalCode')
-        query.addSelect('order.userId')
-        query.addSelect('user.email')
-        query.addSelect('user.firstName')
-        query.addSelect('user.lastName')
-        query.addSelect('status.name')
-        query.addSelect('order.trackCode')
-        query.addSelect('item.productId')
-        query.addSelect('product.name')
-        query.addSelect('brand.name')
-        query.addSelect('product.image')
-        query.addSelect('item.price')
-        query.addSelect('item.size')
-        query.addSelect('item.colorId')
-        query.addSelect('color.name')
-        query.addSelect('item.quantity')
-
-        query.where('order.id = :id', { id })
-
-        query.innerJoin('order.user', 'user')
-        query.innerJoin('order.status', 'status')
-        query.innerJoin('order.items', 'item')
-        query.innerJoin('item.color', 'color')
-        query.innerJoin('item.product', 'product')
-        query.innerJoin('product.brand', 'brand')
-
-        const order = await query.getOne()
-
-        if (!order) {
-            throw new NotFoundException('There is no order with this id', 'OrderNotFound')
-        }
-
-        await this.checkOrder(order, new Date())
-
-        const orderDto = new OrderDto()
-        orderDto.id = order.id
-        orderDto.userId = order.userId
-        orderDto.email = order.user.email
-        orderDto.firstName = order.user.firstName
-        orderDto.lastName = order.user.lastName
-        orderDto.createdTime = order.createdTime
-        orderDto.updatedTime = order.updatedTime
-        orderDto.address = order.address
-        orderDto.postalCode = order.postalCode
-        orderDto.status = order.status.name
-        orderDto.trackCode = order.trackCode
-        orderDto.fullPrice = 0
-        orderDto.items = order.items.map(item => {
-            orderDto.fullPrice += item.price * item.quantity
-
-            return {
-                productId: item.productId,
-                name: item.product.name,
-                brand: item.product.brand.name,
-                image: item.product.image,
-                price: item.price,
-                size: item.size,
-                colorId: item.colorId,
-                color: item.color.name,
-                quantity: item.quantity
-            }
-        })
-
-        return orderDto
-    }
-
-    async createOrder(user: User): Promise<{ id: number }> {
+    async createOrder(createOrderDto: CreateOrderDto, user: User): Promise<{ id: number }> {
         if (!user.address || !user.postalCode) {
             throw new BadRequestException('The user does not have an address specified', 'NoAddress')
         }
 
-        const cartItems = await this.cartItemRepository.find({
-            where: { userId: user.id },
-            relations: ['product']
-        })
-        
-        if (cartItems.length == 0) {
-            throw new BadRequestException('The cart is empty', 'EmptyCart')
-        }
+        const query = this.productSizeRepository.createQueryBuilder('size')
+        query.where('size.size = :size', { size: createOrderDto.size })
+        query.innerJoinAndSelect(
+            'size.color', 'color', 'color.productId = :productId AND color.colorId = :colorId',
+            { productId: createOrderDto.productId, colorId: createOrderDto.colorId }
+        )
+        query.innerJoinAndSelect('color.product', 'product')
 
-        const productSizes: ProductSize[] = []
-        for (const cartItem of cartItems) {
-            const query = this.productSizeRepository.createQueryBuilder('size')
-            query.where('size.size = :size', { size: cartItem.size })
-            query.innerJoinAndSelect(
-                'size.color', 'color', 'color.productId = :productId AND color.colorId = :colorId',
-                { productId: cartItem.productId, colorId: cartItem.colorId }
-            )
+        const productSize = await query.getOne()
 
-            const productSize = await query.getOne()
-
-            if (!productSize || productSize.quantity < cartItem.quantity) {
-                throw new BadRequestException('Some items from the cart are not in the store', 'InvalidCart')
-            }
-
-            productSizes.push(productSize)
+        if (!productSize || productSize.quantity == 0) {
+            throw new BadRequestException('Product with this id, colorId and size are not in the store', 'InvalidOrder')
         }
 
         const order = new Order()
+        const date = new Date()
 
         order.userId = user.id
+        order.createdTime = date
+        order.updatedTime = date
         order.address = user.address
         order.postalCode = user.postalCode
         order.statusId = PROCESSING_STATUS_ID
+        order.productId = createOrderDto.productId
+        order.colorId = createOrderDto.colorId
+        order.size = createOrderDto.size
+        order.price = productSize.color.product.price
 
+        productSize.quantity--
+
+        await productSize.save()
         await order.save()
 
-        for (let i = 0; i < cartItems.length; i++) {
-            const orderItem = new OrderItem()
-            orderItem.orderId = order.id
-            orderItem.productId = cartItems[i].productId
-            orderItem.size = cartItems[i].size
-            orderItem.colorId = cartItems[i].colorId
-            orderItem.price = cartItems[i].product.price //* (100 - cartItem.product.discount) / 100
-            orderItem.quantity = cartItems[i].quantity
+        return { id: order.id }
+    }
 
-            productSizes[i].quantity -= cartItems[i].quantity
+    async estimateProduct(estimateOrderDto: EstimateOrderDto, user: User): Promise<{ message: string }> {
+        const order = await this.orderRepository.findOne({ id: estimateOrderDto.orderId, userId: user.id })
 
-            await productSizes[i].save()
-            await orderItem.save()
+        if (!order) {
+            throw new NotFoundException('This user does not have an order with this id', 'OrderNotFound')
         }
 
-        await this.cartItemRepository.remove(cartItems)
+        if (order.statusId == PROCESSING_STATUS_ID || order.statusId == DELIVERING_STATUS_ID) {
+            throw new BadRequestException('You can\'t comment on the order yet', 'CanNotCommentOrder')
+        }
 
-        return { id: order.id }
+        order.estimation = estimateOrderDto.estimation
+        order.comment = estimateOrderDto.comment
+        order.estimationDate = new Date()
+        await order.save()
+
+        return { message: 'Estimated' }
     }
 
     async sendOrder(id: number, sendOrderDto: SendOrderDto): Promise<{ id: number }> {
@@ -266,6 +208,7 @@ export class OrdersService {
 
         order.statusId = DELIVERING_STATUS_ID
         order.trackCode = sendOrderDto.trackCode
+        order.updatedTime = new Date()
         await order.save()
 
         return { id }
@@ -285,6 +228,7 @@ export class OrdersService {
         }
 
         order.statusId = DELIVERED_STATUS_ID
+        order.updatedTime = new Date()
         await order.save()
 
         return { id }
@@ -304,6 +248,7 @@ export class OrdersService {
         }
 
         order.statusId = RETURN_STATUS_ID
+        order.updatedTime = new Date()
         await order.save()
 
         return { id }
@@ -321,12 +266,13 @@ export class OrdersService {
         }
 
         order.statusId = COMPLETED_STATUS_ID
+        order.updatedTime = new Date()
         await order.save()
 
         return { id }
     }
 
-    async returnMoney(id: number): Promise<{ message: string }> {
+    async returnMoney(id: number): Promise<{ id: number }> {
         const order = await this.orderRepository.findOne({ id })
 
         if (!order) {
@@ -337,21 +283,25 @@ export class OrdersService {
             throw new BadRequestException('The order is no being return', 'OrderStatusNotReturn')
         }
 
-        await order.remove()
+        order.statusId = RETURNED_STATUS_ID
+        order.updatedTime = new Date()
+        await order.save()
 
-        return { message: 'Returned' }
+        return { id }
     }
 
     private async checkOrder(order: Order, date: Date): Promise<void> {
         if (order.statusId == DELIVERED_STATUS_ID && (Number(date) - Number(order.updatedTime)) / 1000 / 60 / 60 / 24 > 2) {
             order.statusId = COMPLETED_STATUS_ID
             order.status = await this.orderStatusRepository.findOne(COMPLETED_STATUS_ID)
+            order.updatedTime = date
             await order.save()
         }
 
         if (order.statusId == DELIVERING_STATUS_ID && (Number(date) - Number(order.updatedTime)) / 1000 / 60 / 60 / 24 > 14) {
             order.statusId = COMPLETED_STATUS_ID
             order.status = await this.orderStatusRepository.findOne(COMPLETED_STATUS_ID)
+            order.updatedTime = date
             await order.save()
         }
     }

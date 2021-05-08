@@ -1,6 +1,7 @@
 import { BaseEntity, Column, CreateDateColumn, Entity, Index, ManyToOne, OneToMany, PrimaryGeneratedColumn, RelationId, UpdateDateColumn } from "typeorm"
-import { OrderItem } from "./order-item.entity"
+import { Color } from "./color.entity"
 import { OrderStatus } from "./order-status.entity"
+import { Product } from "./product.entity"
 import { User } from "./user.entity"
 
 @Entity()
@@ -15,11 +16,11 @@ export class Order extends BaseEntity {
     @RelationId((order: Order) => order.user)
     userId: number
 
-    @CreateDateColumn()
-    @Index()
+    @Column()
     createdTime: Date
 
-    @UpdateDateColumn()
+    @Column()
+    @Index()
     updatedTime: Date;
 
     @Column()
@@ -38,6 +39,33 @@ export class Order extends BaseEntity {
     @Column({ nullable: true })
     trackCode: string
 
-    @OneToMany(() => OrderItem, item => item.order, { onUpdate: "CASCADE", onDelete: "CASCADE" })
-    items: OrderItem[]
+    @ManyToOne(() => Product, product => product.orders, { onUpdate: "CASCADE", onDelete: "CASCADE" })
+    product: Product
+
+    @Column()
+    @Index()
+    @RelationId((order: Order) => order.product)
+    productId: number
+
+    @ManyToOne(() => Color, { onUpdate: "CASCADE", onDelete: "CASCADE" })
+    color: Color
+
+    @Column()
+    @RelationId((order: Order) => order.color)
+    colorId: number
+
+    @Column()
+    size: number
+
+    @Column()
+    price: number
+
+    @Column({ nullable: true })
+    estimation: number
+
+    @Column({ nullable: true })
+    comment: string
+
+    @Column({ nullable: true })
+    estimationDate: Date
 }

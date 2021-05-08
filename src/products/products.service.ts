@@ -106,14 +106,24 @@ export class ProductsService {
         query.leftJoinAndSelect('product.colors', 'productColor')
         query.leftJoinAndSelect('productColor.color', 'color')
         query.leftJoinAndSelect('productColor.sizes', 'size')
+        query.leftJoinAndSelect('product.orders', 'order', 'order.estimation IS NOT NULL')
+        query.leftJoinAndSelect('order.user', 'user')
 
         query.orderBy('size.size')
         query.addOrderBy('productColor.colorId')
+        query.addOrderBy('order.estimationDate', 'DESC')
 
         const product = await query.getOne()
 
         if (!product) {
             throw new NotFoundException('There is no product with this id', 'ProductNotFound')
+        }
+
+        let average = null
+        if (product.orders.length > 0) {
+            let sum = 0
+            product.orders.forEach(order => sum += order.estimation)
+            average = sum / product.orders.length
         }
 
         return {
@@ -131,11 +141,19 @@ export class ProductsService {
             image: product.image,
             volumeModel: product.volumeModel,
             price: product.price,
+            averageEstimation: average,
             sizes: product.colors.length > 0 ? product.colors[0].sizes.map(size => size.size).sort() : [],
             colors: product.colors.map(color => ({
                 colorId: color.colorId,
                 color: color.color.name,
                 texture: color.texture
+            })),
+            estimations: product.orders.map(order => ({
+                firstName: order.user.firstName,
+                lastName: order.user.lastName,
+                estimation: order.estimation,
+                comment: order.comment,
+                estimationDate: order.estimationDate
             }))
         }
     }

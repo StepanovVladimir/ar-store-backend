@@ -1,3 +1,4 @@
+import { EstimationDto } from "src/orders/dto/estimation.dto"
 import { ColorDto } from "./color.dto"
 
 export class ProductDto {
@@ -15,6 +16,8 @@ export class ProductDto {
     image: string
     volumeModel?: string
     price: number
+    averageEstimation?: number
     sizes?: number[]
     colors?: ColorDto[]
+    estimations?: EstimationDto[]
 }

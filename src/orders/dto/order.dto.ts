@@ -1,5 +1,3 @@
-import { OrderItemDto } from "./order-item.dto"
-
 export class OrderDto {
     id: number
     userId: number
@@ -12,6 +10,15 @@ export class OrderDto {
     postalCode: string
     status: string
     trackCode: string
-    fullPrice: number
-    items: OrderItemDto[]
+    productId: number
+    productName: string
+    brand: string
+    image: string
+    price: number
+    colorId: number
+    color: string
+    size: number
+    estimation: number
+    comment: string
+    estimationDate: Date
 }

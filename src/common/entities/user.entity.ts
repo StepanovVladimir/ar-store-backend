@@ -1,5 +1,4 @@
 import { BaseEntity, Column, Entity, Index, ManyToOne, OneToMany, PrimaryGeneratedColumn, RelationId } from "typeorm"
-import { CartItem } from "./cart-item.entity"
 import { Role } from "./role.entity";
 import { Order } from "./order.entity";
 import { Favorite } from "./favorite.entity";
@@ -41,9 +40,6 @@ export class User extends BaseEntity {
     @Index()
     @RelationId((user: User) => user.role)
     roleId: number
-
-    @OneToMany(() => CartItem, item => item.user, { onUpdate: "CASCADE", onDelete: "CASCADE" })
-    cartItems: CartItem[]
 
     @OneToMany(() => Order, order => order.user, { onUpdate: "CASCADE", onDelete: "CASCADE" })
     orders: Order[]

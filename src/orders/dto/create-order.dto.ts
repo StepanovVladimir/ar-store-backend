@@ -1,7 +1,7 @@
-/*import { IsCreditCard, IsNotEmpty, Max, Min } from "class-validator";
+import { IsCreditCard, IsNotEmpty, Max, Min } from "class-validator";
 
 export class CreateOrderDto {
-    @IsCreditCard()
+    /*@IsCreditCard()
     cardNumber: string
 
     @Min(1)
@@ -12,5 +12,14 @@ export class CreateOrderDto {
     expirationYear: number
 
     @IsNotEmpty()
-    ownerName: string
-}*/
+    ownerName: string*/
+
+    @IsNotEmpty()
+    productId: number
+
+    @IsNotEmpty()
+    colorId: number
+
+    @IsNotEmpty()
+    size: number    
+}

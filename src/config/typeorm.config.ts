@@ -1,8 +1,6 @@
 import { TypeOrmModuleOptions } from '@nestjs/typeorm'
 import { Brand } from 'src/common/entities/brand.entity'
-import { CartItem } from 'src/common/entities/cart-item.entity'
 import { Color } from 'src/common/entities/color.entity'
-import { OrderItem } from 'src/common/entities/order-item.entity'
 import { OrderStatus } from 'src/common/entities/order-status.entity'
 import { Order } from 'src/common/entities/order.entity'
 import { ProductColor } from 'src/common/entities/product-color.entity'
@@ -24,7 +22,7 @@ export function getTypeormConfig(): TypeOrmModuleOptions {
             username: process.env.DB_USERNAME,
             password: process.env.DB_PASSWORD,
             database: process.env.DB_NAME,
-            entities: [Product, ProductColor, ProductSize, ShoeType, Color, Brand, Gender, Season, User, Role, CartItem, Order, OrderItem, OrderStatus, Favorite],
+            entities: [Product, ProductColor, ProductSize, ShoeType, Color, Brand, Gender, Season, User, Role, Order, OrderStatus, Favorite],
             synchronize: true
         }
     } else {
@@ -35,7 +33,7 @@ export function getTypeormConfig(): TypeOrmModuleOptions {
             username: process.env.DB_USERNAME,
             password: process.env.DB_PASSWORD,
             database: process.env.DB_NAME,
-            entities: [Product, ProductColor, ProductSize, ShoeType, Color, Brand, Gender, Season, User, Role, CartItem, Order, OrderItem, OrderStatus, Favorite],
+            entities: [Product, ProductColor, ProductSize, ShoeType, Color, Brand, Gender, Season, User, Role, Order, OrderStatus, Favorite],
             synchronize: true,
             ssl: {
                 rejectUnauthorized: false

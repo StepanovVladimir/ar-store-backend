@@ -4,13 +4,12 @@ import { AuthModule } from 'src/auth/auth.module';
 import { OrderRepository } from 'src/common/repositories/order.repository';
 import { OrdersService } from './orders.service';
 import { OrdersController } from './orders.controller';
-import { CartItemRepository } from 'src/common/repositories/cart-item.repository';
 import { ProductSizeRepository } from 'src/common/repositories/product-size.repository';
 import { OrderStatusRepository } from 'src/common/repositories/order-status.repository';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([OrderRepository, OrderStatusRepository, CartItemRepository, ProductSizeRepository]),
+    TypeOrmModule.forFeature([OrderRepository, OrderStatusRepository, ProductSizeRepository]),
     AuthModule
   ],
   providers: [OrdersService],

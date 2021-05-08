@@ -4,6 +4,7 @@ import { ProductColor } from "./product-color.entity"
 import { ShoeType } from "./shoe-type.entity"
 import { Season } from "./season.entity"
 import { Gender } from "./gender.entity"
+import { Order } from "./order.entity"
 
 @Entity()
 export class Product extends BaseEntity {
@@ -71,4 +72,7 @@ export class Product extends BaseEntity {
 
     @OneToMany(() => ProductColor, color => color.product, { onUpdate: "CASCADE", onDelete: "CASCADE" })
     colors: ProductColor[]
+
+    @OneToMany(() => Order, order => order.product, { onUpdate: "CASCADE", onDelete: "CASCADE" })
+    orders: Order[]
 }
