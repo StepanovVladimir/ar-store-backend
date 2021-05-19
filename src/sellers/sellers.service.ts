@@ -46,6 +46,42 @@ export class SellersService {
         return { id: user.id }
     }
 
+    async updateSeller(id: number, updateSellerDto: RegisterSellerDto): Promise<{ id: number }> {
+        const seller = await this.userRepository.findOne(id)
+        if (!seller || seller.roleId != SELLER_ROLE_ID) {
+            throw new NotFoundException('There is no seller with this id', 'SellerNotFound')
+        }
+
+        seller.email = updateSellerDto.email.toLowerCase()
+        seller.firstName = updateSellerDto.firstName
+        seller.lastName = updateSellerDto.lastName
+
+        try {
+            await seller.save()
+        } catch (error) {
+            if (error.code === '23505') {
+                throw new ConflictException('There is already a user with this email address', 'EmailAlreadyExists')
+            } else {
+                throw error
+            }
+        }
+
+        return { id }
+    }
+
+    async resetPassword(id: number): Promise<{ id: number }> {
+        const seller = await this.userRepository.findOne(id)
+        if (!seller || seller.roleId != SELLER_ROLE_ID) {
+            throw new NotFoundException('There is no seller with this id', 'SellerNotFound')
+        }
+
+        seller.passwordHash = await bcrypt.hash(this.DEFAULT_PASSWORD, seller.salt)
+
+        await seller.save()
+
+        return { id }
+    }
+
     async deleteSeller(id: number): Promise<{ message: string }> {
         const seller = await this.userRepository.findOne(id)
         if (!seller || seller.roleId != SELLER_ROLE_ID) {

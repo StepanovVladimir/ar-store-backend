@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, UseGuards, ValidationPipe } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, UseGuards, ValidationPipe } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { HasRoles } from 'src/common/decorators/has-roles.decorator';
 import { User } from 'src/common/entities/user.entity';
@@ -21,6 +21,19 @@ export class SellersController {
     @Post()
     registerSeller(@Body(ValidationPipe) registerSellerDto: RegisterSellerDto): Promise<{ id: number }> {
         return this.sellersService.registerSeller(registerSellerDto)
+    }
+
+    @Put('/:id')
+    updateSeller(
+        @Param('id', ParseIntPipe) id: number,
+        @Body(ValidationPipe) updateSellerDto: RegisterSellerDto
+    ): Promise<{ id: number }> {
+        return this.sellersService.updateSeller(id, updateSellerDto)
+    }
+
+    @Put('/:id/reset-password')
+    resetPassword(@Param('id', ParseIntPipe) id: number): Promise<{ id: number }> {
+        return this.sellersService.resetPassword(id)
     }
 
     @Delete('/:id')
