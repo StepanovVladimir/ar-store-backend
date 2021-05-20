@@ -23,14 +23,6 @@ export class SellersController {
         return this.sellersService.registerSeller(registerSellerDto)
     }
 
-    @Put('/:id')
-    updateSeller(
-        @Param('id', ParseIntPipe) id: number,
-        @Body(ValidationPipe) updateSellerDto: RegisterSellerDto
-    ): Promise<{ id: number }> {
-        return this.sellersService.updateSeller(id, updateSellerDto)
-    }
-
     @Put('/:id/reset-password')
     resetPassword(@Param('id', ParseIntPipe) id: number): Promise<{ id: number }> {
         return this.sellersService.resetPassword(id)

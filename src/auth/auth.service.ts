@@ -12,6 +12,7 @@ import { ChangePasswordDto } from './dto/change-password.dto';
 import { UpdateAddressDto } from './dto/update-address.dto';
 import { USER_ROLE_ID } from 'src/config/constants';
 import { sendEmail } from 'src/common/utils/sendEmail';
+import { UpdateNameDto } from './dto/update-name.dto';
 
 @Injectable()
 export class AuthService {
@@ -114,6 +115,19 @@ export class AuthService {
         return { id: user.id }
     }
 
+    async getProfile(user: User): Promise<User> {
+        const profile = new User()
+
+        profile.id = user.id
+        profile.email = user.email
+        profile.firstName = user.firstName
+        profile.lastName = user.lastName
+        profile.address = user.address
+        profile.postalCode = user.postalCode
+
+        return profile
+    }
+
     async changePassword(user: User, changePasswordDto: ChangePasswordDto): Promise<{ message: string }> {
         if (!await this.validatePassword(user, changePasswordDto.oldPassword)) {
             throw new BadRequestException('The old password is wrong', 'WrongPassword')
@@ -124,6 +138,14 @@ export class AuthService {
         await user.save()
 
         return { message: 'Changed' }
+    }
+
+    async updateName(user: User, updateNameDto: UpdateNameDto): Promise<{ message: string }> {
+        user.firstName = updateNameDto.firstName
+        user.lastName = updateNameDto.lastName
+        await user.save()
+
+        return { message: 'Updated' }
     }
 
     async updateAddress(user: User, updateAddressDto: UpdateAddressDto): Promise<{ message: string }> {
