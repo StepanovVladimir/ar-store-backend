@@ -304,7 +304,7 @@ export class ProductsService {
             )
 
             const size = await query.getOne()
-            size.quantity = quantity.quantity
+            size.quantity += quantity.quantity
 
             await size.save()
         }
