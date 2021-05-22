@@ -8,12 +8,12 @@ import { ProductSizeRepository } from 'src/common/repositories/product-size.repo
 import { COMPLETED_STATUS_ID, DELIVERED_STATUS_ID, DELIVERING_STATUS_ID, PROCESSING_STATUS_ID, RETURNED_STATUS_ID, RETURN_STATUS_ID } from 'src/config/constants';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { EstimateOrderDto } from './dto/estimate-order.dto';
-import { EstimationDto } from './dto/estimation.dto';
 import { EstimationsDto } from './dto/estimations.dto';
 import { GetOrdersFilterDto } from './dto/get-orders-filter.dto';
 import { OrderDto } from './dto/order.dto';
 import { OrdersDto } from './dto/orders.dto';
 import { SendOrderDto } from './dto/send-order.dto';
+import * as moment from 'moment';
 
 @Injectable()
 export class OrdersService {
@@ -49,8 +49,8 @@ export class OrdersService {
             const dto = new OrderDto()
             dto.id = order.id
             dto.userId = order.userId
-            dto.createdTime = order.createdTime
-            dto.updatedTime = order.updatedTime
+            dto.createdTime = moment(order.createdTime).format('DD.MM.YYYY HH:mm')
+            dto.updatedTime = moment(order.updatedTime).format('DD.MM.YYYY HH:mm')
             dto.address = order.address
             dto.postalCode = order.postalCode
             dto.status = order.status.name
@@ -65,7 +65,7 @@ export class OrdersService {
             dto.size = order.size
             dto.estimation = order.estimation
             dto.comment = order.comment
-            dto.estimationDate = order.estimationDate
+            dto.estimationDate = order.estimationDate ? moment(order.estimationDate).format('DD.MM.YYYY HH:mm') : null
 
             dtos.push(dto)
         }
@@ -97,12 +97,7 @@ export class OrdersService {
             }
         }
 
-        let pageSize: number
-        if (filterDto.take) {
-            pageSize = filterDto.take
-        } else {
-            pageSize = 20
-        }
+        const pageSize = filterDto.take ? filterDto.take : 20
         query.take(pageSize)
 
         const orders = await query.getMany()
@@ -118,8 +113,8 @@ export class OrdersService {
             dto.email = order.user.email
             dto.firstName = order.user.firstName
             dto.lastName = order.user.lastName
-            dto.createdTime = order.createdTime
-            dto.updatedTime = order.updatedTime
+            dto.createdTime = moment(order.createdTime).format('DD.MM.YYYY HH:mm')
+            dto.updatedTime = moment(order.updatedTime).format('DD.MM.YYYY HH:mm')
             dto.address = order.address
             dto.postalCode = order.postalCode
             dto.status = order.status.name
@@ -134,7 +129,7 @@ export class OrdersService {
             dto.size = order.size
             dto.estimation = order.estimation
             dto.comment = order.comment
-            dto.estimationDate = order.estimationDate
+            dto.estimationDate = order.estimationDate ? moment(order.estimationDate).format('DD.MM.YYYY HH:mm') : null
 
             dtos.push(dto)
         }
@@ -169,12 +164,7 @@ export class OrdersService {
             }
         }
 
-        let pageSize: number
-        if (filterDto.take) {
-            pageSize = filterDto.take
-        } else {
-            pageSize = 20
-        }
+        const pageSize = filterDto.take ? filterDto.take : 20
         query.take(pageSize)
 
         const comments = await query.getMany()
@@ -188,7 +178,7 @@ export class OrdersService {
                 lastName: comment.user.lastName,
                 estimation: comment.estimation,
                 comment: comment.comment,
-                estimationDate: comment.estimationDate
+                estimationDate: comment.estimationDate ? moment(comment.estimationDate).format('DD.MM.YYYY HH:mm') : null
             }))
         } 
     }

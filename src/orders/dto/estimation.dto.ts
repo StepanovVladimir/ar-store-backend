@@ -5,5 +5,5 @@ export class EstimationDto {
     lastName: string
     estimation: number
     comment: string
-    estimationDate: Date
+    estimationDate: string
 }

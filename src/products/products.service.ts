@@ -12,6 +12,7 @@ import { ProductSizeRepository } from 'src/common/repositories/product-size.repo
 import { ProductColorRepository } from 'src/common/repositories/product-color.repository';
 import { QuantityDto } from './dto/quantity.dto';
 import { ProductsDto } from './dto/products.dto';
+import * as moment from 'moment';
 
 @Injectable()
 export class ProductsService {
@@ -83,12 +84,7 @@ export class ProductsService {
             }
         }
 
-        let pageSize: number
-        if (filterDto.take) {
-            pageSize = filterDto.take
-        } else {
-            pageSize = 20
-        }
+        const pageSize = filterDto.take ? filterDto.take : 20
         query.take(pageSize)
 
         const products = await query.getMany()
@@ -161,7 +157,7 @@ export class ProductsService {
                 lastName: order.user.lastName,
                 estimation: order.estimation,
                 comment: order.comment,
-                estimationDate: order.estimationDate
+                estimationDate: order.estimationDate ? moment(order.estimationDate).format('DD.MM.YYYY HH:mm') : null
             }))
         }
     }

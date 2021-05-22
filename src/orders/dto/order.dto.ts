@@ -4,8 +4,8 @@ export class OrderDto {
     email: string
     firstName: string
     lastName: string
-    createdTime: Date
-    updatedTime: Date
+    createdTime: string
+    updatedTime: string
     address: string
     postalCode: string
     status: string
@@ -20,5 +20,5 @@ export class OrderDto {
     size: number
     estimation: number
     comment: string
-    estimationDate: Date
+    estimationDate: string
 }
