@@ -11,6 +11,7 @@ import { ProductColor } from 'src/common/entities/product-color.entity';
 import { ProductSizeRepository } from 'src/common/repositories/product-size.repository';
 import { ProductColorRepository } from 'src/common/repositories/product-color.repository';
 import { QuantityDto } from './dto/quantity.dto';
+import { ProductsDto } from './dto/products.dto';
 
 @Injectable()
 export class ProductsService {
@@ -25,7 +26,7 @@ export class ProductsService {
         private productSizeRepository: ProductSizeRepository
     ) {}
 
-    async getProducts(filterDto: GetProductsFilterDto): Promise<ProductDto[]> {
+    async getProducts(filterDto: GetProductsFilterDto): Promise<ProductsDto> {
         const query = this.productRepository.createQueryBuilder('product')
         query.select('product.id')
         query.addSelect('product.name')
@@ -72,6 +73,8 @@ export class ProductsService {
             query.andWhere('product.price <= :maxPrice', { maxPrice: filterDto.maxPrice })
         }
 
+        const productsCount = await query.getCount()
+
         if (filterDto.page) {
             if (filterDto.take) {
                 query.skip(filterDto.take * (filterDto.page - 1))
@@ -80,20 +83,25 @@ export class ProductsService {
             }
         }
 
+        let pageSize: number
         if (filterDto.take) {
-            query.take(filterDto.take)
+            pageSize = filterDto.take
         } else {
-            query.take(20)
+            pageSize = 20
         }
+        query.take(pageSize)
 
         const products = await query.getMany()
-        return products.map(product => ({
-            id: product.id,
-            name: product.name,
-            brand: product.brand.name,
-            image: product.image,
-            price: product.price
-        }))
+        return {
+            pageCount: Math.ceil(productsCount / pageSize),
+            products: products.map(product => ({
+                id: product.id,
+                name: product.name,
+                brand: product.brand.name,
+                image: product.image,
+                price: product.price
+            }))
+        } 
     }
 
     async getProduct(id: number): Promise<ProductDto> {

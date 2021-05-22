@@ -11,6 +11,7 @@ import { ProductSizesValidationPipe } from './pipes/product-sizes-validation.pip
 import { PartialUpdateProductDto } from './dto/partial-update-product.dto';
 import { QuantityDto } from './dto/quantity.dto';
 import { ProductQuantitiesValidationPipe } from './pipes/product-quantities-validation.pipe';
+import { ProductsDto } from './dto/products.dto';
 
 @Controller('products')
 export class ProductsController {
@@ -19,7 +20,7 @@ export class ProductsController {
     @Get()
     getProducts(
         @Query() filterDto: GetProductsFilterDto
-    ): Promise<ProductDto[]> {
+    ): Promise<ProductsDto> {
         return this.productsService.getProducts(filterDto)
     }
 

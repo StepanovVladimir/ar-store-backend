@@ -8,8 +8,10 @@ import { SELLER_ROLE } from 'src/config/constants';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { EstimateOrderDto } from './dto/estimate-order.dto';
 import { EstimationDto } from './dto/estimation.dto';
+import { EstimationsDto } from './dto/estimations.dto';
 import { GetOrdersFilterDto } from './dto/get-orders-filter.dto';
 import { OrderDto } from './dto/order.dto';
+import { OrdersDto } from './dto/orders.dto';
 import { SendOrderDto } from './dto/send-order.dto';
 import { OrdersService } from './orders.service';
 
@@ -28,14 +30,14 @@ export class OrdersController {
     @Get('/all')
     @HasRoles(SELLER_ROLE)
     @UseGuards(RolesGuard)
-    getAllOrders(@Query() filterDto: GetOrdersFilterDto): Promise<OrderDto[]> {
+    getAllOrders(@Query() filterDto: GetOrdersFilterDto): Promise<OrdersDto> {
         return this.ordersService.getAllOrders(filterDto)
     }
 
     @Get('/comments')
     @HasRoles(SELLER_ROLE)
     @UseGuards(RolesGuard)
-    getComments(@Query() filterDto: GetOrdersFilterDto): Promise<EstimationDto[]> {
+    getComments(@Query() filterDto: GetOrdersFilterDto): Promise<EstimationsDto> {
         return this.ordersService.getComments(filterDto)
     }
 

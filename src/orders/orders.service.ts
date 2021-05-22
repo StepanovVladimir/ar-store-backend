@@ -9,8 +9,10 @@ import { COMPLETED_STATUS_ID, DELIVERED_STATUS_ID, DELIVERING_STATUS_ID, PROCESS
 import { CreateOrderDto } from './dto/create-order.dto';
 import { EstimateOrderDto } from './dto/estimate-order.dto';
 import { EstimationDto } from './dto/estimation.dto';
+import { EstimationsDto } from './dto/estimations.dto';
 import { GetOrdersFilterDto } from './dto/get-orders-filter.dto';
 import { OrderDto } from './dto/order.dto';
+import { OrdersDto } from './dto/orders.dto';
 import { SendOrderDto } from './dto/send-order.dto';
 
 @Injectable()
@@ -71,7 +73,7 @@ export class OrdersService {
         return dtos
     }
 
-    async getAllOrders(filterDto: GetOrdersFilterDto): Promise<OrderDto[]> {
+    async getAllOrders(filterDto: GetOrdersFilterDto): Promise<OrdersDto> {
         const query = this.orderRepository.createQueryBuilder('order')
         query.innerJoinAndSelect('order.user', 'user')
         query.innerJoinAndSelect('order.status', 'status')
@@ -85,6 +87,8 @@ export class OrdersService {
 
         query.orderBy('order.updatedTime', 'DESC')
 
+        const productsCount = await query.getCount()
+
         if (filterDto.page) {
             if (filterDto.take) {
                 query.skip(filterDto.take * (filterDto.page - 1))
@@ -93,11 +97,13 @@ export class OrdersService {
             }
         }
 
+        let pageSize: number
         if (filterDto.take) {
-            query.take(filterDto.take)
+            pageSize = filterDto.take
         } else {
-            query.take(20)
+            pageSize = 20
         }
+        query.take(pageSize)
 
         const orders = await query.getMany()
 
@@ -133,10 +139,13 @@ export class OrdersService {
             dtos.push(dto)
         }
 
-        return dtos
+        return {
+            pageCount: Math.ceil(productsCount / pageSize),
+            orders: dtos
+        }
     }
 
-    async getComments(filterDto: GetOrdersFilterDto): Promise<EstimationDto[]> {
+    async getComments(filterDto: GetOrdersFilterDto): Promise<EstimationsDto> {
         const query = this.orderRepository.createQueryBuilder('order')
         query.select('order.id')
         query.addSelect('user.email')
@@ -150,6 +159,8 @@ export class OrdersService {
         query.innerJoin('order.user', 'user')
         query.orderBy('order.estimationDate', 'DESC')
 
+        const productsCount = await query.getCount()
+
         if (filterDto.page) {
             if (filterDto.take) {
                 query.skip(filterDto.take * (filterDto.page - 1))
@@ -158,23 +169,28 @@ export class OrdersService {
             }
         }
 
+        let pageSize: number
         if (filterDto.take) {
-            query.take(filterDto.take)
+            pageSize = filterDto.take
         } else {
-            query.take(20)
+            pageSize = 20
         }
+        query.take(pageSize)
 
         const comments = await query.getMany()
 
-        return comments.map(comment => ({
-            orderId: comment.id,
-            email: comment.user.email,
-            firstName: comment.user.firstName,
-            lastName: comment.user.lastName,
-            estimation: comment.estimation,
-            comment: comment.comment,
-            estimationDate: comment.estimationDate
-        }))
+        return {
+            pageCount: Math.ceil(productsCount / pageSize),
+            estimations: comments.map(comment => ({
+                orderId: comment.id,
+                email: comment.user.email,
+                firstName: comment.user.firstName,
+                lastName: comment.user.lastName,
+                estimation: comment.estimation,
+                comment: comment.comment,
+                estimationDate: comment.estimationDate
+            }))
+        } 
     }
 
     async createOrder(createOrderDto: CreateOrderDto, user: User): Promise<{ id: number }> {
