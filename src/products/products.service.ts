@@ -144,6 +144,9 @@ export class ProductsService {
             season: product.season.name,
             image: product.image,
             volumeModel: product.volumeModel,
+            liningMaterial: product.liningMaterial,
+            soleMaterial: product.soleMaterial,
+            insoleMaterial: product.insoleMaterial,
             price: product.price,
             averageEstimation: average,
             sizes: product.colors.length > 0 ? product.colors[0].sizes.map(size => size.size).sort() : [],
@@ -173,8 +176,8 @@ export class ProductsService {
         query.innerJoinAndSelect('size.color', 'productColor')
         query.innerJoinAndSelect('productColor.color', 'color')
 
-        query.orderBy('size.size')
-        query.addOrderBy('productColor.colorId')
+        query.orderBy('productColor.colorId')
+        query.addOrderBy('size.size')
 
         const sizes = await query.getMany()
 

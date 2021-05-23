@@ -15,6 +15,9 @@ export class ProductDto {
     season?: string
     image: string
     volumeModel?: string
+    liningMaterial?: string
+    soleMaterial?: string
+    insoleMaterial?: string
     price: number
     averageEstimation?: number
     sizes?: number[]
