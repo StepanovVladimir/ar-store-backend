@@ -49,8 +49,8 @@ export class OrdersService {
             const dto = new OrderDto()
             dto.id = order.id
             dto.userId = order.userId
-            dto.createdTime = moment(order.createdTime).format('DD.MM.YYYY HH:mm')
-            dto.updatedTime = moment(order.updatedTime).format('DD.MM.YYYY HH:mm')
+            dto.createdTime = moment(order.createdTime.setHours(order.createdTime.getHours() + 3)).format('DD.MM.YYYY HH:mm')
+            dto.updatedTime = moment(order.updatedTime.setHours(order.updatedTime.getHours() + 3)).format('DD.MM.YYYY HH:mm')
             dto.address = order.address
             dto.postalCode = order.postalCode
             dto.status = order.status.name
@@ -65,7 +65,9 @@ export class OrdersService {
             dto.size = order.size
             dto.estimation = order.estimation
             dto.comment = order.comment
-            dto.estimationDate = order.estimationDate ? moment(order.estimationDate).format('DD.MM.YYYY HH:mm') : null
+            dto.estimationDate = order.estimationDate
+                ? moment(order.estimationDate.setHours(order.estimationDate.getHours() + 3)).format('DD.MM.YYYY HH:mm')
+                : null
 
             dtos.push(dto)
         }
@@ -113,8 +115,8 @@ export class OrdersService {
             dto.email = order.user.email
             dto.firstName = order.user.firstName
             dto.lastName = order.user.lastName
-            dto.createdTime = moment(order.createdTime).format('DD.MM.YYYY HH:mm')
-            dto.updatedTime = moment(order.updatedTime).format('DD.MM.YYYY HH:mm')
+            dto.createdTime = moment(order.createdTime.setHours(order.createdTime.getHours() + 3)).format('DD.MM.YYYY HH:mm')
+            dto.updatedTime = moment(order.updatedTime.setHours(order.updatedTime.getHours() + 3)).format('DD.MM.YYYY HH:mm')
             dto.address = order.address
             dto.postalCode = order.postalCode
             dto.status = order.status.name
@@ -129,7 +131,9 @@ export class OrdersService {
             dto.size = order.size
             dto.estimation = order.estimation
             dto.comment = order.comment
-            dto.estimationDate = order.estimationDate ? moment(order.estimationDate).format('DD.MM.YYYY HH:mm') : null
+            dto.estimationDate = order.estimationDate
+                ? moment(order.estimationDate.setHours(order.estimationDate.getHours() + 3)).format('DD.MM.YYYY HH:mm')
+                : null
 
             dtos.push(dto)
         }
@@ -178,7 +182,9 @@ export class OrdersService {
                 lastName: comment.user.lastName,
                 estimation: comment.estimation,
                 comment: comment.comment,
-                estimationDate: comment.estimationDate ? moment(comment.estimationDate).format('DD.MM.YYYY HH:mm') : null
+                estimationDate: comment.estimationDate
+                    ? moment(comment.estimationDate.setHours(comment.estimationDate.getHours() + 3)).format('DD.MM.YYYY HH:mm')
+                    : null
             }))
         } 
     }

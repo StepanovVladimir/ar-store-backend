@@ -157,7 +157,9 @@ export class ProductsService {
                 lastName: order.user.lastName,
                 estimation: order.estimation,
                 comment: order.comment,
-                estimationDate: order.estimationDate ? moment(order.estimationDate).format('DD.MM.YYYY HH:mm') : null
+                estimationDate: order.estimationDate
+                    ? moment(order.estimationDate.setHours(order.estimationDate.getHours() + 3)).format('DD.MM.YYYY HH:mm')
+                    : null
             }))
         }
     }
