@@ -363,14 +363,14 @@ export class OrdersService {
     }
 
     private async checkOrder(order: Order, date: Date): Promise<void> {
-        if (order.statusId == DELIVERED_STATUS_ID && (Number(date) - Number(order.updatedTime)) / 1000 / 60 / 60 / 24 > 2) {
+        if (order.statusId == DELIVERED_STATUS_ID && (Number(date) - Number(order.updatedTime)) / 1000 / 60 / 60 / 24 > 7) {
             order.statusId = COMPLETED_STATUS_ID
             order.status = await this.orderStatusRepository.findOne(COMPLETED_STATUS_ID)
             order.updatedTime = date
             await order.save()
         }
 
-        if (order.statusId == DELIVERING_STATUS_ID && (Number(date) - Number(order.updatedTime)) / 1000 / 60 / 60 / 24 > 14) {
+        if (order.statusId == DELIVERING_STATUS_ID && (Number(date) - Number(order.updatedTime)) / 1000 / 60 / 60 / 24 > 28) {
             order.statusId = COMPLETED_STATUS_ID
             order.status = await this.orderStatusRepository.findOne(COMPLETED_STATUS_ID)
             order.updatedTime = date
