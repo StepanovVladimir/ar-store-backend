@@ -1,4 +1,5 @@
 import { IsNotEmpty } from "class-validator";
+import { SizeDto } from "./size.dto";
 
 export class ColorDto {
     @IsNotEmpty()
@@ -8,4 +9,6 @@ export class ColorDto {
 
     @IsNotEmpty()
     texture: string
+
+    sizes?: SizeDto[]
 }

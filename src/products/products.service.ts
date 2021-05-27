@@ -153,7 +153,11 @@ export class ProductsService {
             colors: product.colors.map(color => ({
                 colorId: color.colorId,
                 color: color.color.name,
-                texture: color.texture
+                texture: color.texture,
+                sizes: color.sizes.map(size => ({
+                    size: size.size,
+                    quantity: size.quantity
+                }))
             })),
             estimations: product.orders.map(order => ({
                 firstName: order.user.firstName,
