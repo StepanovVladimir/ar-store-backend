@@ -8,10 +8,9 @@ import { HasRoles } from 'src/common/decorators/has-roles.decorator';
 import { ADMIN_ROLE } from 'src/config/constants';
 import { RolesGuard } from 'src/common/guards/roles.guard';
 import { ProductSizesValidationPipe } from './pipes/product-sizes-validation.pipe';
-import { PartialUpdateProductDto } from './dto/partial-update-product.dto';
-import { QuantityDto } from './dto/quantity.dto';
 import { ProductQuantitiesValidationPipe } from './pipes/product-quantities-validation.pipe';
 import { ProductsDto } from './dto/products.dto';
+import { QuantitiesDto } from './dto/quantities.dto';
 
 @Controller('products')
 export class ProductsController {
@@ -30,7 +29,7 @@ export class ProductsController {
     }
 
     @Get('/:id/quantities')
-    getQuantities(@Param('id', ParseIntPipe) id: number): Promise<QuantityDto[]> {
+    getQuantities(@Param('id', ParseIntPipe) id: number): Promise<QuantitiesDto> {
         return this.productsService.getQuantities(id)
     }
 
@@ -58,7 +57,7 @@ export class ProductsController {
     @UseGuards(AuthGuard(), RolesGuard)
     partialUpdateProduct(
         @Param('id', ParseIntPipe) id: number,
-        @Body(ValidationPipe, ProductQuantitiesValidationPipe) updateProductDto: PartialUpdateProductDto
+        @Body(ValidationPipe, ProductQuantitiesValidationPipe) updateProductDto: QuantitiesDto
     ): Promise<{ id: number }> {
         return this.productsService.partialUpdateProductDto(id, updateProductDto)
     }

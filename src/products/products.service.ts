@@ -6,13 +6,13 @@ import { ProductDto } from './dto/product.dto';
 import { ProductRepository } from 'src/common/repositories/protuct.repository';
 import { Product } from 'src/common/entities/product.entity';
 import { ProductSize } from 'src/common/entities/product-size.entity';
-import { PartialUpdateProductDto } from './dto/partial-update-product.dto';
 import { ProductColor } from 'src/common/entities/product-color.entity';
 import { ProductSizeRepository } from 'src/common/repositories/product-size.repository';
 import { ProductColorRepository } from 'src/common/repositories/product-color.repository';
 import { QuantityDto } from './dto/quantity.dto';
 import { ProductsDto } from './dto/products.dto';
 import * as moment from 'moment';
+import { QuantitiesDto } from './dto/quantities.dto';
 
 @Injectable()
 export class ProductsService {
@@ -171,7 +171,13 @@ export class ProductsService {
         }
     }
 
-    async getQuantities(id: number): Promise<QuantityDto[]> {
+    async getQuantities(id: number): Promise<QuantitiesDto> {
+        const { price } = await this.productRepository.findOne(id, { select: ['price'] })
+
+        if (!price) {
+            throw new NotFoundException('There is no product with this id', 'ProductNotFound')
+        }
+
         const colors = await this.productColorRepository.find({ productId: id })
 
         const query = this.productSizeRepository.createQueryBuilder('size')
@@ -185,12 +191,15 @@ export class ProductsService {
 
         const sizes = await query.getMany()
 
-        return sizes.map(size => ({
-            size: size.size,
-            colorId: size.color.colorId,
-            color: size.color.color.name,
-            quantity: size.quantity
-        }))
+        return {
+            price,
+            quantities: sizes.map(size => ({
+                size: size.size,
+                colorId: size.color.colorId,
+                color: size.color.color.name,
+                quantity: size.quantity
+            }))
+        } 
     }
 
     async createProduct(createProductDto: CreateProductDto): Promise<{ id: number }> {
@@ -299,7 +308,7 @@ export class ProductsService {
         return { id }
     }
 
-    async partialUpdateProductDto(id: number, updateProductDto: PartialUpdateProductDto): Promise<{ id: number }> {
+    async partialUpdateProductDto(id: number, updateProductDto: QuantitiesDto): Promise<{ id: number }> {
         const product = await this.productRepository.findOne(id)
         if (!product) {
             throw new NotFoundException('There is no product with this id', 'ProductNotFound')
