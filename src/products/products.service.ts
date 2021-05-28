@@ -9,7 +9,6 @@ import { ProductSize } from 'src/common/entities/product-size.entity';
 import { ProductColor } from 'src/common/entities/product-color.entity';
 import { ProductSizeRepository } from 'src/common/repositories/product-size.repository';
 import { ProductColorRepository } from 'src/common/repositories/product-color.repository';
-import { QuantityDto } from './dto/quantity.dto';
 import { ProductsDto } from './dto/products.dto';
 import * as moment from 'moment';
 import { QuantitiesDto } from './dto/quantities.dto';
@@ -72,6 +71,10 @@ export class ProductsService {
 
         if (filterDto.maxPrice) {
             query.andWhere('product.price <= :maxPrice', { maxPrice: filterDto.maxPrice })
+        }
+
+        if (filterDto.minQuantity) {
+            query.andWhere('size.quantity <= :quantity', { quantity: filterDto.minQuantity })
         }
 
         const productsCount = await query.getCount()
