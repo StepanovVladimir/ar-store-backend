@@ -83,6 +83,10 @@ export class OrdersService {
         query.innerJoinAndSelect('order.product', 'product')
         query.innerJoinAndSelect('product.brand', 'brand')
 
+        if (filterDto.search) {
+            
+        }
+
         if (filterDto.status) {
             query.where('status.name = :status', { status: filterDto.status })
         }
@@ -353,6 +357,20 @@ export class OrdersService {
 
         if (order.statusId != RETURN_STATUS_ID) {
             throw new BadRequestException('The order is no being return', 'OrderStatusNotReturn')
+        }
+
+        const query = this.productSizeRepository.createQueryBuilder('size')
+        query.where('size.size = :size', { size: order.size })
+        query.innerJoin(
+            'size.color', 'color', 'color.productId = :productId AND color.colorId = :colorId',
+            { productId: order.productId, colorId: order.colorId }
+        )
+
+        const productSize = await query.getOne()
+
+        if (productSize) {
+            productSize.quantity++
+            await productSize.save()
         }
 
         order.statusId = RETURNED_STATUS_ID

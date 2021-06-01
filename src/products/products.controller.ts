@@ -63,6 +63,8 @@ export class ProductsController {
     }
 
     @Delete('/:id')
+    @HasRoles(ADMIN_ROLE)
+    @UseGuards(AuthGuard(), RolesGuard)
     deleteProduct(@Param('id', ParseIntPipe) id: number): Promise<{ id: number }> {
         return this.productsService.deleteProduct(id)
     }
