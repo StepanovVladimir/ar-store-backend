@@ -84,11 +84,15 @@ export class OrdersService {
         query.innerJoinAndSelect('product.brand', 'brand')
 
         if (filterDto.search) {
-            
+            query.andWhere(
+                '(user.email ILIKE :search OR user.firstName ILIKE :search OR user.lastName ILIKE :search OR product.name ILIKE :search '
+                + 'OR brand.name ILIKE :search)',
+                { search: `%${filterDto.search}%` }
+            )
         }
 
         if (filterDto.status) {
-            query.where('status.name = :status', { status: filterDto.status })
+            query.andWhere('status.name = :status', { status: filterDto.status })
         }
 
         query.orderBy('order.updatedTime', 'DESC')
@@ -157,9 +161,24 @@ export class OrdersService {
         query.addSelect('order.estimation')
         query.addSelect('order.comment')
         query.addSelect('order.estimationDate')
+        query.addSelect('order.productId')
+        query.addSelect('product.name')
+        query.addSelect('brand.name')
+
+        query.innerJoin('order.user', 'user')
+        query.innerJoin('order.product', 'product')
+        query.innerJoin('product.brand', 'brand')
 
         query.where('order.comment IS NOT NULL')
-        query.innerJoin('order.user', 'user')
+
+        if (filterDto.search) {
+            query.andWhere(
+                '(user.email ILIKE :search OR user.firstName ILIKE :search OR user.lastName ILIKE :search OR product.name ILIKE :search '
+                + 'OR brand.name ILIKE :search)',
+                { search: `%${filterDto.search}%` }
+            )
+        }
+
         query.orderBy('order.estimationDate', 'DESC')
 
         const productsCount = await query.getCount()
@@ -184,6 +203,9 @@ export class OrdersService {
                 email: comment.user.email,
                 firstName: comment.user.firstName,
                 lastName: comment.user.lastName,
+                productId: comment.productId,
+                productName: comment.product.name,
+                brand: comment.product.brand.name,
                 estimation: comment.estimation,
                 comment: comment.comment,
                 estimationDate: comment.estimationDate
