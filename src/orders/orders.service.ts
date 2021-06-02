@@ -402,6 +402,36 @@ export class OrdersService {
         return { id }
     }
 
+    async deleteOrder(id: number, user: User): Promise<{ message: string }> {
+        const order = await this.orderRepository.findOne({ id, userId: user.id })
+
+        if (!order) {
+            throw new NotFoundException('This user does not have an order with this id', 'OrderNotFound')
+        }
+
+        if (order.statusId != PROCESSING_STATUS_ID) {
+            throw new BadRequestException('The order is no being processed', 'OrderStatusNotProcessing')
+        }
+
+        const query = this.productSizeRepository.createQueryBuilder('size')
+        query.where('size.size = :size', { size: order.size })
+        query.innerJoin(
+            'size.color', 'color', 'color.productId = :productId AND color.colorId = :colorId',
+            { productId: order.productId, colorId: order.colorId }
+        )
+
+        const productSize = await query.getOne()
+
+        if (productSize) {
+            productSize.quantity++
+            await productSize.save()
+        }
+
+        await order.remove()
+
+        return { message: 'Deleted' }
+    }
+
     private async checkOrder(order: Order, date: Date): Promise<void> {
         if (order.statusId == DELIVERED_STATUS_ID && (Number(date) - Number(order.updatedTime)) / 1000 / 60 / 60 / 24 > 7) {
             order.statusId = COMPLETED_STATUS_ID

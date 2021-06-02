@@ -86,4 +86,9 @@ export class OrdersController {
     returnMoney(@Param('id', ParseIntPipe) id: number): Promise<{ id: number }> {
         return this.ordersService.returnMoney(id)
     }
+
+    @Delete('/:id')
+    deleteOrder(@Param('id', ParseIntPipe) id: number, @GetUser() user: User): Promise<{ message: string }> {
+        return this.ordersService.deleteOrder(id, user)
+    }
 }
