@@ -11,8 +11,7 @@ export const sendEmail = async (email: string, link: string) => {
 
   await transporter.sendMail({
     to: email,
-    subject: 'Confirm Email',
-    text: 'Hello world?',
-    html: `Please click this link to confirm your email: <a href="${link}">Confirm email</a>`
+    subject: 'Подтвердите email',
+    html: `Пожалуйста кликните по этой ссылке, чтобы подтвердить свой email: <a href="${link}">Подтвердить email</a>`
   })
 }

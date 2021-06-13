@@ -23,8 +23,7 @@ export class CreateProductDto {
     @IsNotEmpty()
     image: string
 
-    /*@IsNotEmpty()
-    volumeModel: string*/
+    volumeModel: string
 
     @IsNotEmpty()
     liningMaterial: string
